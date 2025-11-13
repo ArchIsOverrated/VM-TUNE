@@ -39,7 +39,16 @@ setup_virtualization_tools() {
 
 setup_desktop_environment() {
     echo "Starting installation of desktop environment..."
-    sudo dnf install labwc waybar rofi-wayland swaybg network-manager-applet nm-connection-editor sddm -y
+    sudo dnf install labwc \
+    waybar \
+    rofi-wayland \
+    swaybg \
+    network-manager-applet \
+    nm-connection-editor \
+    alacritty \
+    firefox \
+    xorg-x11-server-Xwayland \
+    sddm -y
     if [ $? -ne 0 ]; then
         echo "Installation of desktop packages failed"
         exit 1
@@ -57,6 +66,12 @@ setup_desktop_environment() {
         exit 1
     fi
     
+    sudo cp ./labwc.desktop /usr/share/wayland-sessions/
+    if [ $? -ne 0 ]; then
+        echo "Copying labwc.desktop failed."
+        exit 1
+    fi
+
     echo "Desktop environment installed successfully."
 }
 
