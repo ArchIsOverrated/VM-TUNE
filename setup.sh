@@ -41,7 +41,7 @@ setup_desktop_environment() {
     echo "Starting installation of desktop environment..."
     sudo dnf install sway \
     waybar \
-    pavuconrol \
+    pavucontrol \
     gtk-murrine-engine \
     wofi \
     network-manager-applet \
@@ -76,21 +76,20 @@ setup_desktop_environment() {
        exit 1
     fi
 
-    cp -f ./gtkrc-2.0 "/home/$TARGET_USER/.gtkrc-2.0"
-    if [ $? -ne 0 ]; then
-       echo "Copying gtk-2.0 settings failed"
-       exit 1
-    fi
-
+    cp ./.gtkrc-2.0 "/home/$TARGET_USER/"
     cp -rf ./.config "/home/$TARGET_USER/.config"
     if [ $? -ne 0 ]; then
        echo "Copying config files failed"
        exit 1
     fi
 
+    sudo chown -R $TARGET_USER:$TARGET_USER "/home/$TARGET_USER/.themes"
+    sudo chown -R $TARGET_USER:$TARGET_USER "/home/$TARGET_USER/.config"
+    sudo chown $TARGET_USER:$TARGET_USER "/home/$TARGET_USER/.gtkrc-2.0"
+
     echo "Desktop environment installed successfully."
 }
 
 update_system
 setup_virtualization_tools
-#setup_desktop_environment
+setup_desktop_environment
