@@ -3,6 +3,7 @@ set -Eeuo pipefail
 
 trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" >&2' ERR
 
+
 select_gpu() {
   # Get all GPU-type devices
   mapfile -t GPUS < <(lspci -nn | grep -Ei "VGA compatible controller|3D controller|Display controller")
@@ -36,5 +37,5 @@ select_gpu() {
 
 # Example usage:
 select_gpu
-echo "Selected IDs: $GPU_IDS"
+echo "$GPU_IDS" > gpu_ids.txt
 
