@@ -91,32 +91,41 @@ detect_cpu_vendor() {
 
 gpu_passthrough_setup() {
   source ./settings.conf
-  local CPU_VENDOR=$(detect_cpu_vendor)
-  if [[ "$VFIO_ENABLED" -eq 1 ]] && [[ -n "$SELECTED_GPU_IDS" ]]; then
-    echo "Configuring GPU Passthrough with VFIO for GPU IDs: $SELECTED_GPU_IDS"
-    local ARGS
-    if [[ "$CPU_VENDOR" == "intel" ]]; then
-      echo "Detected Intel CPU. Ensuring Intel IOMMU is enabled."
-      ARGS="intel_iommu=on iommu=pt rd.driver.pre=vfio-pci"
-    elif [[ "$CPU_VENDOR" == "amd" ]]; then
-      echo "Detected AMD CPU. Ensuring AMD IOMMU is enabled."
-      ARGS="amd_iommu=on iommu=pt rd.driver.pre=vfio-pci"
-    else
-      echo "Unknown CPU vendor. Exiting."
-      exit 1
+  local CPU_VENDOR
+  CPU_VENDOR=$(detect_cpu_vendor)
+  local ARGS
+
+  if [[ "$CPU_VENDOR" == "intel" ]]; then
+    echo "Detected Intel CPU. Ensuring Intel IOMMU is enabled."
+    ARGS="intel_iommu=on iommu=pt rd.driver.pre=vfio-pci"
+  elif [[ "$CPU_VENDOR" == "amd" ]]; then
+    echo "Detected AMD CPU. Ensuring AMD IOMMU is enabled."
+    ARGS="amd_iommu=on iommu=pt rd.driver.pre=vfio-pci"
+  else
+    echo "Unknown CPU vendor. Exiting."
+    exit 1
   fi
-  grubby --update-kernel=ALL --args="$ARGS"
-  cat <<EOF > /etc/modules-load.d/vfio.conf
+
+  if [[ "$VFIO_ENABLED" -eq 1 && -n "$SELECTED_GPU_IDS" ]]; then
+    echo "Configuring GPU Passthrough with VFIO for GPU IDs: $SELECTED_GPU_IDS"
+    grubby --update-kernel=ALL --args="$ARGS"
+    cat <<EOF > /etc/modules-load.d/vfio.conf
 vfio
 vfio_iommu_type1
 vfio_pci
 vfio_virqfd
 EOF
-  echo "options vfio-pci ids=$SELECTED_GPU_IDS" > /etc/modprobe.d/vfio.conf
-  dracut --force
-  echo "GRUB configuration updated. Please reboot for changes to take effect."
-  elif [[ "$VFIO_ENABLED" -eq 0 ]]; then
-    echo "VFIO Passthrough not enabled. No changes made."
+    echo "options vfio-pci ids=$SELECTED_GPU_IDS" > /etc/modprobe.d/vfio.conf
+    dracut --force
+    echo "GRUB configuration updated. Please reboot for changes to take effect."
+  elif [[ "$VFIO_ENABLED" -eq 0 && -n "$SELECTED_GPU_IDS" ]]; then
+    echo "Removing GPU Passthrough configuration for GPU IDs: $SELECTED_GPU_IDS"
+    grubby --update-kernel=ALL --remove-args="$ARGS"
+    # Remove vfio module config files
+    rm -f /etc/modules-load.d/vfio.conf
+    rm -f /etc/modprobe.d/vfio.conf
+    dracut --force
+    echo "GRUB configuration reverted. Please reboot for changes to take effect."
   else
     echo "No GPU selected for passthrough. Exiting."
   fi
@@ -124,9 +133,14 @@ EOF
 
 # Example usage:
 check_for_settings_file
+
+# load config after ensuring it exists
+source ./settings.conf
+
 if [[ "$PROMPT_FOR_VFIO" -eq 1 ]]; then
   select_vfio_mode
   select_gpu
   save_settings
 fi
+
 gpu_passthrough_setup
