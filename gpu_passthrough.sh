@@ -2,23 +2,23 @@
 set -Eeuo pipefail
 
 if [[ $EUID -ne 0 ]]; then
-    echo "Please run this script with sudo:"
-    echo "  sudo $0"
-    exit 1
+  echo "Please run this script with sudo:"
+  echo "  sudo $0"
+  exit 1
 fi
 
 trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" >&2' ERR
 
 check_for_settings_file() {
-    if [[ ! -f ./settings.conf ]]; then
-        echo "ERROR: settings.conf not found! Creating one now..."
-          cat <<EOF > ./settings.conf
+  if [[ ! -f ./settings.conf ]]; then
+    echo "ERROR: settings.conf not found! Creating one now..."
+    cat <<EOF > ./settings.conf
 # GPU Passthrough Settings
 PROMPT_FOR_VFIO=1
 VFIO_ENABLED=0
 SELECTED_GPU_IDS=""
 EOF
-    fi
+  fi
 }
 
 save_settings() {
@@ -77,16 +77,16 @@ select_gpu() {
 }
 
 detect_cpu_vendor() {
-    local vendor
-    vendor=$(grep -m1 'vendor_id' /proc/cpuinfo | awk '{print $3}')
+  local vendor
+  vendor=$(grep -m1 'vendor_id' /proc/cpuinfo | awk '{print $3}')
 
-    if [[ "$vendor" == "GenuineIntel" ]]; then
-        echo "intel"
-    elif [[ "$vendor" == "AuthenticAMD" ]]; then
-        echo "amd"
-    else
-        echo "unknown"
-    fi
+  if [[ "$vendor" == "GenuineIntel" ]]; then
+    echo "intel"
+  elif [[ "$vendor" == "AuthenticAMD" ]]; then
+    echo "amd"
+  else
+    echo "unknown"
+  fi
 }
 
 gpu_passthrough_setup() {
@@ -96,27 +96,27 @@ gpu_passthrough_setup() {
     echo "Configuring GPU Passthrough with VFIO for GPU IDs: $SELECTED_GPU_IDS"
     local ARGS
     if [[ "$CPU_VENDOR" == "intel" ]]; then
-        echo "Detected Intel CPU. Ensuring Intel IOMMU is enabled."
-        ARGS="intel_iommu=on iommu=pt rd.driver.pre=vfio-pci"
+      echo "Detected Intel CPU. Ensuring Intel IOMMU is enabled."
+      ARGS="intel_iommu=on iommu=pt rd.driver.pre=vfio-pci"
     elif [[ "$CPU_VENDOR" == "amd" ]]; then
-        echo "Detected AMD CPU. Ensuring AMD IOMMU is enabled."
-        ARGS="amd_iommu=on iommu=pt rd.driver.pre=vfio-pci"
+      echo "Detected AMD CPU. Ensuring AMD IOMMU is enabled."
+      ARGS="amd_iommu=on iommu=pt rd.driver.pre=vfio-pci"
     else
-        echo "Unknown CPU vendor. Exiting."
-        exit 1
-    fi
-    grubby --update-kernel=ALL --args="$ARGS"
-    cat <<EOF > /etc/modules-load.d/vfio.conf
+      echo "Unknown CPU vendor. Exiting."
+      exit 1
+  fi
+  grubby --update-kernel=ALL --args="$ARGS"
+  cat <<EOF > /etc/modules-load.d/vfio.conf
 vfio
 vfio_iommu_type1
 vfio_pci
 vfio_virqfd
 EOF
-    echo "options vfio-pci ids=$SELECTED_GPU_IDS" > /etc/modprobe.d/vfio.conf
-    dracut --force
-    echo "GRUB configuration updated. Please reboot for changes to take effect."
-  else
-    echo "GPU Passthrough not enabled. Exiting."
+  echo "options vfio-pci ids=$SELECTED_GPU_IDS" > /etc/modprobe.d/vfio.conf
+  dracut --force
+  echo "GRUB configuration updated. Please reboot for changes to take effect."
+  elif [[ "$VFIO_ENABLED" -eq 0 ]]; then
+    echo "VFIO Passthrough not enabled. No changes made."
   else
     echo "No GPU selected for passthrough. Exiting."
   fi
