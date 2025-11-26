@@ -19,6 +19,7 @@ VFIO_ENABLED=0
 SELECTED_GPU_IDS=""
 EOF
   fi
+  source ./settings.conf
 }
 
 save_settings() {
@@ -32,6 +33,7 @@ EOF
 
 select_vfio_mode() {
   read -p "Enter Passthrough mode? 1 = yes 0 = no " VFIO_ENABLED
+  echo "VFIO_ENABLED=$VFIO_ENABLED"
   if [[ "$VFIO_ENABLED" != "0" && "$VFIO_ENABLED" != "1" ]]; then
     echo "Invalid input. Please enter 1 for yes or 0 for no."
     exit 1
@@ -39,7 +41,6 @@ select_vfio_mode() {
 }
 
 select_gpu() {
-  source ./settings.conf
   # Get all GPU-type devices
   mapfile -t GPUS < <(lspci -nn | grep -Ei "VGA compatible controller|3D controller|Display controller")
 
@@ -90,7 +91,6 @@ detect_cpu_vendor() {
 }
 
 gpu_passthrough_setup() {
-  source ./settings.conf
   local CPU_VENDOR
   CPU_VENDOR=$(detect_cpu_vendor)
   local ARGS
@@ -135,8 +135,6 @@ EOF
 check_for_settings_file
 
 # load config after ensuring it exists
-source ./settings.conf
-
 if [[ "$PROMPT_FOR_VFIO" -eq 1 ]]; then
   select_vfio_mode
   select_gpu
