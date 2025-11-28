@@ -54,6 +54,10 @@ setup_virtualization_tools() {
   echo "User $TARGET_USER added to libvirt group."
 }
 
+setup_looking-glass() {
+  ./install_looking-glass.sh
+}
+
 setup_desktop_environment() {
   echo "Starting installation of desktop environment..."
 
