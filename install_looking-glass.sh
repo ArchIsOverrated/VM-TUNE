@@ -58,5 +58,5 @@ build_looking-glass() {
 
 setup_looking-glass() {
   build_looking-glass
-  
 }
+setup_looking-glass
