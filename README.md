@@ -23,3 +23,7 @@ with Virt-Manager frontend. Check Fedora Documentation for more information.
 	server supplies (uses `curl` with `-J` or falls back to `wget`).
 - **`install_looking-glass.sh`**: installer for Looking Glass (if present) —
 	read the script header for options.
+
+
+**Warning**
+Do not run the virtual machine in the BTRFS file system it may be significantly more laggy
