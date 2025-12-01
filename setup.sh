@@ -108,8 +108,8 @@ setup_desktop_environment() {
   curl \
   sddm -y
 
-  systemctl enable --now sddm
-  systemctl enable --now NetworkManager
+  systemctl enable sddm
+  systemctl enable NetworkManager
 
   systemctl set-default graphical.target
 
@@ -133,6 +133,7 @@ setup_desktop_environment() {
 update_system
 setup_snapshots
 setup_virtualization_tools
+setup_looking-glass
 setup_desktop_environment
 echo "Setup completed successfully."
 echo "Please reboot your system to apply all changes."
