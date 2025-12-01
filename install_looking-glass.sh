@@ -63,7 +63,7 @@ configure_looking-glass() {
   echo "f /dev/shm/looking-glass 0660 $TARGET_USER qemu -" >> /etc/tmpfiles.d/10-looking-glass.conf
   echo "Looking Glass installation completed."
   sudo semanage fcontext -a -t svirt_tmpfs_t /dev/shm/looking-glass
-  echo "alias looking-glass="/home/$TARGET_USER/CustomFedora/looking-glass-B7/client/build/looking-glass-client" >> /home/$TARGET_USER/.bashrc"
+  echo "alias looking-glass=\"/home/$TARGET_USER/CustomFedora/looking-glass-B7/client/build/looking-glass-client\"" >> "/home/$TARGET_USER/.bashrc"
 }
 
 setup_looking-glass() {
