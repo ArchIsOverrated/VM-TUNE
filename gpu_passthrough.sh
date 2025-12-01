@@ -9,14 +9,13 @@ fi
 
 trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" >&2' ERR
 
-check_for_settings_file() {
+# does nothing for now, not needed
+load_settings() {
   if [[ ! -f ./settings.conf ]]; then
     echo "ERROR: settings.conf not found! Creating one now..."
     cat <<EOF > ./settings.conf
 # GPU Passthrough Settings
 PROMPT_FOR_VFIO=1
-VFIO_ENABLED=0
-SELECTED_GPU_IDS=""
 EOF
   fi
   source ./settings.conf
@@ -26,8 +25,6 @@ save_settings() {
   cat <<EOF > ./settings.conf
 # GPU Passthrough Settings
 PROMPT_FOR_VFIO=$PROMPT_FOR_VFIO
-VFIO_ENABLED=$VFIO_ENABLED
-SELECTED_GPU_IDS="$SELECTED_GPU_IDS"
 EOF
 }
 
@@ -132,13 +129,11 @@ EOF
 }
 
 # Example usage:
-check_for_settings_file
+#load_settings
 
 # load config after ensuring it exists
-if [[ "$PROMPT_FOR_VFIO" -eq 1 ]]; then
-  select_vfio_mode
-  select_gpu
-  save_settings
-fi
+select_vfio_mode
+select_gpu
+#save_settings This function does nothing for now, not needed
 
 gpu_passthrough_setup
