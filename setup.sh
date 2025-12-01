@@ -77,7 +77,7 @@ setup_virtualization_tools() {
 
   echo "Virtualization tools installed successfully."
 
-  systemctl enable libvirtd
+  systemctl enable --now libvirtd
 
   echo "libvirtd service enabled successfully."
 
@@ -87,7 +87,10 @@ setup_virtualization_tools() {
 }
 
 setup_looking-glass() {
-  ./install_looking-glass.sh
+  if [ ! -f ./install_looking-glass.sh ]; then
+    echo "ERROR: install_looking-glass.sh not found."
+    exit 1
+  fi
 }
 
 setup_desktop_environment() {
@@ -105,7 +108,8 @@ setup_desktop_environment() {
   curl \
   sddm -y
 
-  systemctl enable sddm
+  systemctl enable --now sddm
+  systemctl enable --now NetworkManager
 
   systemctl set-default graphical.target
 
