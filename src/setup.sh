@@ -125,12 +125,11 @@ setup_desktop_environment() {
     mkdir -p "/home/$TARGET_USER/.themes"
   fi
 
-  cp -rf ./.themes/Gruvbox-B-MB-Dark "/home/$TARGET_USER/.themes/"
+  cp -rf ../.themes/Gruvbox-B-MB-Dark "/home/$TARGET_USER/.themes/"
 
-  cp ./.gtkrc-2.0 "/home/$TARGET_USER/"
+  cp ../.gtkrc-2.0 "/home/$TARGET_USER/"
 
-  cp -rf ./.config "/home/$TARGET_USER/.config"
-
+  cp -rf ../.config "/home/$TARGET_USER/.config"
   chown -R "$TARGET_USER:$TARGET_USER" "/home/$TARGET_USER/.themes"
   chown -R "$TARGET_USER:$TARGET_USER" "/home/$TARGET_USER/.config"
   chown "$TARGET_USER:$TARGET_USER" "/home/$TARGET_USER/.gtkrc-2.0"
