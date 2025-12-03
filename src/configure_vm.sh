@@ -9,17 +9,23 @@ fi
 
 configure_hooks() {
   # Create hooks directory if it doesn't exist
-  mkdir -p "$QEMU_HOOKS_DIR"
+  if [ ! -d $HOOKS_DIR ]; then
+    cp -r "../hooks" "/etc/libvirt"
+  fi
 
-  VM_DIR
-  echo "Hooks configured successfully in $QEMU_HOOKS_DIR"
-
-  mkdir -p "$VM_DIR"
-  
+  if [ ! -d $VM_DIR ]; then
+    mkdir -p "$VM_DIR"
+    touch "$VM_DIR/allocpages.sh"
+    touch "$VM_DIR/releasepages.sh"
+    ln -s "$LIB_DIR/hugepages.sh" "$VM_DIR/allocpages.sh"
+    ln -s "$LIB_DIR/hugepages.sh" "$VM_DIR/releasepages.sh"
+  else
+  fi
 }
 
-HOOKS_DIR="../hooks"
+HOOKS_DIR="/etc/libvirt/hooks"
 QEMU_HOOKS_DIR="$HOOKS_DIR/qemu.d"
+LIB_DIR=$HOOKS_DIR/lib
 VM_DIR="$QEMU_HOOKS_DIR/$1"
 
 configure_hooks
