@@ -27,13 +27,10 @@ configure_hooks() {
 
   if [ ! -d $VM_DIR ]; then
     mkdir -p "$VM_DIR"
-    touch "$VM_DIR/allocpages.sh"
-    touch "$VM_DIR/releasepages.sh"
     ln -s "$LIB_DIR/hugepages.sh" "$VM_DIR/allocpages.sh"
     ln -s "$LIB_DIR/hugepages.sh" "$VM_DIR/releasepages.sh"
   fi
 }
-
 
 if [[ "${1:-}" == "-h" || $# -lt 1 ]]; then
   usage
@@ -45,5 +42,3 @@ LIB_DIR=$HOOKS_DIR/lib
 VM_DIR="$QEMU_HOOKS_DIR/$1"
 
 configure_hooks
-
-
