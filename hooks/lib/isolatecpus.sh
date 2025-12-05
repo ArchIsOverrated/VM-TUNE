@@ -1,10 +1,17 @@
 #!/bin/bash
 
+trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" | tee -a ./isolatecpus.log >&2' ERR
+
 VM_NAME="$1"
 ACTION="$2"
 
-if [ -z "$VM_NAME" ] || [ -z "$ACTION" ]; then
-  echo "Usage: $0 <vm_name> <isolate|deisolate>"
+if [ -z "$VM_NAME" ]; then
+  echo "No VM Name"
+  exit 1
+fi
+
+if [ -z "$ACTION" ]; then
+  echo "No Action"
   exit 1
 fi
 
@@ -16,8 +23,8 @@ VM_CPU_PINSET=$(grep "<vcpupin" "$VM_XML" \
   | paste -sd ',' -)
 
 if [ -z "$VM_CPU_PINSET" ]; then
-  echo "No CPU pinning found."
-  exit 1
+  echo "No CPU pinning found. Skipping isolation."
+  exit 0
 fi
 
 # Total host cores → "0-(TOTAL-1)"
@@ -71,22 +78,17 @@ done
 # --- ACTION LOGIC -------------------------------------------------------------
 
 if [ "$ACTION" = "isolate" ]; then
-
   echo "Isolating VM cores. Host-only CPUs: $HOST_CPUS"
   systemctl set-property --runtime -- system.slice AllowedCPUs="$HOST_CPUS"
   systemctl set-property --runtime -- user.slice   AllowedCPUs="$HOST_CPUS"
   systemctl set-property --runtime -- init.slice   AllowedCPUs="$HOST_CPUS"
 
 elif [ "$ACTION" = "deisolate" ]; then
-
   echo "Restoring full CPU set: $ALL_CORES"
   systemctl set-property --runtime -- system.slice AllowedCPUs="$ALL_CORES"
   systemctl set-property --runtime -- user.slice   AllowedCPUs="$ALL_CORES"
   systemctl set-property --runtime -- init.slice   AllowedCPUs="$ALL_CORES"
-
 else
-
   echo "Unknown action: $ACTION"
   exit 1
-
 fi

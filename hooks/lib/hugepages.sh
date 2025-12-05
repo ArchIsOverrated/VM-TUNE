@@ -1,5 +1,7 @@
 #!/bin/bash
 
+trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" | tee -a ./hugepages.log >&2' ERR
+
 VM_NAME="$1"
 ACTION="$2"
 
