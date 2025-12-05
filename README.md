@@ -18,11 +18,7 @@ script does and how to run them safely.
 	kernel boot args.
 - **`setup.sh`**: general setup helper for initial system configuration. It assumes you are using fedora as your distro and then installs and configures sway as a lightweight desktop to be used as the hypervisor environment. It also sets up QEMU/KVM
 with Virt-Manager frontend. Check Fedora Documentation for more information.
-- **`download_looking-glass.sh`**: small downloader that defaults to
-	`https://looking-glass.io/artifact/stable/source`, preserving the filename the
-	server supplies (uses `curl` with `-J` or falls back to `wget`).
-- **`install_looking-glass.sh`**: installer for Looking Glass (if present) —
-	read the script header for options.
+- **`install_looking-glass.sh`**: Downloads and compiles looking-glass from source
 
 **Libvirt Hooks**
 - **`qemu`**: This is the dispatcher script for the hooking scripts that will enable hugepages and isolating cpu when starting the VM. It will also undo the huge pages and cpu isolation on VM shutoff. It should work if you configure cpu pinning and hugepages in the xml config. It might work if you only have huge pages but do not have cpu pinning but I haven't tested it so I cannot say.
