@@ -19,6 +19,16 @@ usage() {
   exit 1
 }
 
+configure_xml() {
+  # configure the xml file for the VM
+  if !command -v python; then {
+    echo "python is not installed! exiting"
+    exit 1
+  }
+
+  python configure_xml.py
+}
+
 configure_hooks() {
   # Create hooks directory if it doesn't exist
   if [ ! -d $HOOKS_DIR ]; then
