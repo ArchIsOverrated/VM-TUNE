@@ -24,6 +24,10 @@ with Virt-Manager frontend. Check Fedora Documentation for more information.
 - **`install_looking-glass.sh`**: installer for Looking Glass (if present) —
 	read the script header for options.
 
+**Libvirt Hooks**
+- **`qemu`**: This is the dispatcher script for the hooking scripts that will enable hugepages and isolating cpu when starting the VM. It will also undo the huge pages and cpu isolation on VM shutoff. It should work if you configure cpu pinning and hugepages in the xml config. It might work if you only have huge pages but do not have cpu pinning but I haven't tested it so I cannot say.
+- **`lib/hugepages.sh`**: This hook will be configured to be called for you if you setup configure vm script. It will change teh VM from running on 4KiB pages to 2MiB pages which greatly increases VM performance. You must configure your VM to have at least 2MiB and your virtual machine memory ram allocation must be a multiple of 2 or else the script will have an error.
+-**`lib/isolatecpus.sh`**: You must have cpu pinning configured in your xml for this to work. This isolates SYSTEMD processes from the VM cores so that the VM cores don't experience as much noise from the Linux Kernel.
 
 **Warning**
 Do not run the virtual machine in the BTRFS file system it may be significantly more laggy

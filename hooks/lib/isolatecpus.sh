@@ -23,8 +23,8 @@ VM_CPU_PINSET=$(grep "<vcpupin" "$VM_XML" \
   | paste -sd ',' -)
 
 if [ -z "$VM_CPU_PINSET" ]; then
-  echo "No CPU pinning found."
-  exit 1
+  echo "No CPU pinning found. Skipping isolation."
+  exit 0
 fi
 
 # Total host cores → "0-(TOTAL-1)"
