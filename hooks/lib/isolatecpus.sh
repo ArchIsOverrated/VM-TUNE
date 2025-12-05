@@ -1,5 +1,7 @@
 #!/bin/bash
 
+trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" | tee -a ./isolatecpus.log >&2' ERR
+
 VM_NAME="$1"
 ACTION="$2"
 
@@ -71,22 +73,17 @@ done
 # --- ACTION LOGIC -------------------------------------------------------------
 
 if [ "$ACTION" = "isolate" ]; then
-
   echo "Isolating VM cores. Host-only CPUs: $HOST_CPUS"
   systemctl set-property --runtime -- system.slice AllowedCPUs="$HOST_CPUS"
   systemctl set-property --runtime -- user.slice   AllowedCPUs="$HOST_CPUS"
   systemctl set-property --runtime -- init.slice   AllowedCPUs="$HOST_CPUS"
 
 elif [ "$ACTION" = "deisolate" ]; then
-
   echo "Restoring full CPU set: $ALL_CORES"
   systemctl set-property --runtime -- system.slice AllowedCPUs="$ALL_CORES"
   systemctl set-property --runtime -- user.slice   AllowedCPUs="$ALL_CORES"
   systemctl set-property --runtime -- init.slice   AllowedCPUs="$ALL_CORES"
-
 else
-
   echo "Unknown action: $ACTION"
   exit 1
-
 fi

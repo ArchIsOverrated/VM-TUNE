@@ -7,7 +7,7 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" >&2' ERR
+trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" | tee -a ./gpu_passthrough.log >&2' ERR
 
 # does nothing for now, not needed
 load_settings() {
