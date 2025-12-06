@@ -29,6 +29,19 @@ QEMU_HOOKS_DIR="$HOOKS_DIR/qemu.d"
 VM_DIR="$QEMU_HOOKS_DIR/$VM_NAME"
 XML_PATH="/etc/libvirt/qemu/${VM_NAME}.xml"
 
+detect_cpu_vendor() {
+  local vendor
+  vendor=$(grep -m1 'vendor_id' /proc/cpuinfo | awk '{print $3}')
+
+  if [[ "$vendor" == "GenuineIntel" ]]; then
+    echo "intel"
+  elif [[ "$vendor" == "AuthenticAMD" ]]; then
+    echo "amd"
+  else
+    echo "unknown"
+  fi
+}
+
 configure_hooks() {
   # Create hooks directory if needed
   if [[ ! -d "$HOOKS_DIR" ]]; then
@@ -49,9 +62,28 @@ configure_xml() {
 
   echo
   echo "Detected CPU core layout:"
-  cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | sort -u | sort -t',' -t'-' -n
+  local CPU_VENDOR
+  CPU_VENDOR=$(detect_cpu_vendor)
+  if [[ "$CPU_VENDOR" == "intel" ]]; then
+    cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | sort -u | sort -t'-' -n
+  elif [[ "$CPU_VENDOR" == "amd" ]]; then
+    cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | sort -u | sort -t',' -n
+  else
+    echo "Unknown CPU vendor. Exiting."
+    exit 1
+  fi
   echo
 
+  echo "The above shows the CPU threads grouped by physical core."
+  echo "When pinning threads its best to keep all threads of a physical core together."
+  echo "For example, on Intel systems '0-1' means threads 0 and 1 belong to the same physical core."
+  echo "On AMD systems '0,8' means threads 0 and 8 belong to the same physical core."
+  echo "You can pin to individual threads, but performance may be impacted."
+  echo "Also try to pin cores that are near to each other in numbering for best cache performance."
+  echo "Example CPU pinning inputs:"
+  echo "  Intel: 0-3,8-11"
+  echo "  AMD:   0-3,8-11"
+  echo
   read -rp "Enter comma-separated host CPU IDs to pin to (example: 2,3,4,5): " CPU_LIST
 
   echo "Applying hugepages + CPU pinning to XML..."
