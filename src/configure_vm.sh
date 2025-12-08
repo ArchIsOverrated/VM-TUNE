@@ -85,12 +85,17 @@ configure_xml() {
   echo "  AMD:   0-3,8-11"
   echo
   read -rp "Enter comma-separated host CPU IDs to pin to (example: 2,3,4,5): " CPU_LIST
+  echo
+  echo "For this one I recommend different cpu from the one that you entered for the CPU pin for the VM"
+  echo "Usually 2 threads is enough, 4 if you have many usb devices passed in"
+  read -rp "Enter comma-separated for emulator CPU IDs to pin to (example: 6-7): " EMULATOR_LIST
 
   echo "Applying hugepages + CPU pinning to XML..."
   echo "DEBUG: XML_PATH='$XML_PATH'"
   echo "DEBUG: CPU_LIST='$CPU_LIST'"
+  echo "DEBUG: EMULATOR_LIST=$EMULATOR_LIST'"
 
-  python3 configure_xml.py "$XML_PATH" "$CPU_LIST"
+  python3 configure_xml.py "$XML_PATH" "$CPU_LIST" "$EMULATOR_LIST"
 
   virsh define "$XML_PATH"
   echo "XML updated successfully."

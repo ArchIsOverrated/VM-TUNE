@@ -8,6 +8,7 @@ if len(sys.argv) != 3:
 
 xml_path = sys.argv[1]
 cpu_list_str = sys.argv[2]
+emulator_list = sys.argv[3]
 
 cpus = [c.strip() for c in cpu_list_str.split(",") if c.strip()]
 
@@ -17,39 +18,43 @@ root = tree.getroot()
 # -----------------------------
 # Add <memoryBacking><hugepages/>
 # -----------------------------
-memoryBacking = root.find("memoryBacking")
-if memoryBacking is None:
-    memoryBacking = ET.SubElement(root, "memoryBacking")
+def huge_pages():
+    memoryBacking = root.find("memoryBacking")
+    if memoryBacking is None:
+        memoryBacking = ET.SubElement(root, "memoryBacking")
 
-# Remove existing children if any
-for child in memoryBacking.findall("*"):
-    memoryBacking.remove(child)
+    # Remove existing children if any
+    for child in memoryBacking.findall("*"):
+        memoryBacking.remove(child)
 
-ET.SubElement(memoryBacking, "hugepages")
+    ET.SubElement(memoryBacking, "hugepages")
 
 # -----------------------------
 # CPU pinning
 # -----------------------------
-cputune = root.find("cputune")
-if cputune is None:
-    cputune = ET.SubElement(root, "cputune")
+def cpu_pinning():
+    cputune = root.find("cputune")
+    if cputune is None:
+        cputune = ET.SubElement(root, "cputune")
 
-# Remove previous pins
-for pin in list(cputune.findall("vcpupin")):
-    cputune.remove(pin)
+    # Remove previous pins
+    for pin in list(cputune.findall("vcpupin")):
+        cputune.remove(pin)
 
-vcpu_elem = root.find("vcpu")
+    vcpu_elem = root.find("vcpu")
 
-if vcpu_elem is None or not vcpu_elem.text:
-    print("Error: no <vcpu> element found")
-    sys.exit(1)
+    if vcpu_elem is None or not vcpu_elem.text:
+        print("Error: no <vcpu> element found")
+        sys.exit(1)
 
+    num_vcpus = int(vcpu_elem.text)
 
-num_vcpus = int(vcpu_elem.text)
+    # Only pin what the user gave
+    for v in range(min(num_vcpus, len(cpus))):
+        ET.SubElement(cputune, "vcpupin", {"vcpu": str(v), "cpuset": cpus[v]})
+    ET.SubElement(cputune, "emulatorpin", {"cpuset": emulator_list})
 
-# Only pin what the user gave
-for v in range(min(num_vcpus, len(cpus))):
-    ET.SubElement(cputune, "vcpupin",
-                  {"vcpu": str(v), "cpuset": cpus[v]})
+huge_pages()
+cpu_pinning()
 
 tree.write(xml_path)
