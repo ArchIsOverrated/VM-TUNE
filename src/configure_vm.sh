@@ -88,7 +88,7 @@ configure_xml() {
   echo
   echo "For this one I recommend different cpu from the one that you entered for the CPU pin for the VM"
   echo "Usually 2 threads is enough, 4 if you have many usb devices passed in"
-  read -rp "Enter comma-separated for emulator CPU IDs to pin to (example: 6-7): " EMULATOR_LIST
+  read -rp "Enter comma-separated for emulator CPU IDs to pin to (example: 1,13): " EMULATOR_LIST
 
   echo "Applying hugepages + CPU pinning to XML..."
   echo "DEBUG: XML_PATH='$XML_PATH'"

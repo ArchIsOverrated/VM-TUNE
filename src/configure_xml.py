@@ -2,8 +2,8 @@
 import sys
 import xml.etree.ElementTree as ET
 
-if len(sys.argv) != 3:
-    print("Usage: configure_xml.py <xml-path> <cpu-list>")
+if len(sys.argv) != 4:
+    print("Usage: configure_xml.py <xml-path> <cpu-list> <emulator-cpu-list>")
     sys.exit(1)
 
 xml_path = sys.argv[1]
