@@ -75,6 +75,25 @@ for ((c=0; c<TOTAL; c++)); do
   fi
 done
 
+# --- IRQ AFFINITY HELPER ------------------------------------------------------
+
+# Set all IRQs that support smp_affinity_list to the given CPU list.
+# Keep it stupid simple: we don't try to be smart per-device, we just
+# push everything to the chosen cores.
+set_all_irq_affinity() {
+  local cpulist="$1"
+
+  for path in /proc/irq/[0-9]*; do
+    local irq="${path##*/}"
+    local file="$path/smp_affinity_list"
+
+    if [ -w "$file" ]; then
+      # Ignore errors on weird IRQs that refuse changes
+      echo "$cpulist" > "$file" 2>/dev/null || true
+    fi
+  done
+}
+
 # --- ACTION LOGIC -------------------------------------------------------------
 
 if [ "$ACTION" = "isolate" ]; then
@@ -83,12 +102,20 @@ if [ "$ACTION" = "isolate" ]; then
   systemctl set-property --runtime -- user.slice   AllowedCPUs="$HOST_CPUS"
   systemctl set-property --runtime -- init.slice   AllowedCPUs="$HOST_CPUS"
 
+  echo "Setting IRQ affinity to host CPUs: $HOST_CPUS"
+  set_all_irq_affinity "$HOST_CPUS"
+
 elif [ "$ACTION" = "deisolate" ]; then
   echo "Restoring full CPU set: $ALL_CORES"
   systemctl set-property --runtime -- system.slice AllowedCPUs="$ALL_CORES"
   systemctl set-property --runtime -- user.slice   AllowedCPUs="$ALL_CORES"
   systemctl set-property --runtime -- init.slice   AllowedCPUs="$ALL_CORES"
+
+  echo "Restoring IRQ affinity to all CPUs: $ALL_CORES"
+  set_all_irq_affinity "$ALL_CORES"
+
 else
   echo "Unknown action: $ACTION"
   exit 1
 fi
+
