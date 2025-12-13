@@ -125,7 +125,7 @@ configure_vm() {
   fi
 
   echo "Running Looking Glass installer..."
-  ./configure_vm.sh
+  ./install_looking-glass.sh
   echo "Looking Glass installation completed."
 
   ./configure_vm.sh "$VM_NAME"
