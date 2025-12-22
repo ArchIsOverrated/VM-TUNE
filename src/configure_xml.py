@@ -235,7 +235,7 @@ def transparency_optimization():
         print("Error: no <features> element found")
         sys.exit(1)
 
-    # KVM: hide kvm
+    # hide kvm
     kvm = features.find("kvm")
     if kvm is None:
         print("this is none")
@@ -246,6 +246,17 @@ def transparency_optimization():
         hidden = ET.SubElement(kvm, "hidden")
 
     hidden.set("state", "on")
+
+    # use real computer smbios
+    os = root.find("os")
+    if os is None:
+        print("Error: no <os> element found")
+        sys.exit(1)
+    
+    smbios = os.find("smbios")
+    if smbios is None:
+        smbios = ET.SubElement(os,"smbios")
+    smbios.set("mode","host")
 
 huge_pages()
 cpu_layout()
