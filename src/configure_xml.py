@@ -74,8 +74,6 @@ def cpu_layout():
             "name": "topoext"
         })
     
-
-
 # -----------------------------
 # CPU pinning
 # -----------------------------
@@ -105,6 +103,82 @@ def cpu_pinning():
         ET.SubElement(cputune, "vcpupin", {"vcpu": str(v), "cpuset": cpus[v]})
     ET.SubElement(cputune, "emulatorpin", {"cpuset": emulator_list})
 
+def scsi():
+    # Find <devices>
+    devices = root.find("devices")
+    if devices is None:
+        print("Error: no <devices> element found")
+        sys.exit(1)
+
+    # Remove existing NVMe controllers
+    for controller in list(devices.findall("controller")):
+        if controller.get("type") == "scsi":
+            devices.remove(controller)
+
+    # Add NVMe controller
+    ET.SubElement(devices, "controller", {"type": "scsi", "index": "0", "model": "virtio-scsi"})
+
+    # Find the first real disk in the VM
+    disk = None
+    for d in devices.findall("disk"):
+        if d.get("device") == "disk":
+            disk = d
+            break
+
+    if disk is None:
+        print("Error: no <disk device='disk'> found")
+        sys.exit(1)
+
+     # Ensure <driver> exists and set performance-friendly options
+    driver = disk.find("driver")
+    if driver is None:
+        driver = ET.SubElement(disk, "driver")   
+
+    driver.set("name", "qemu")
+    driver.set("type", "qcow2")
+    driver.set("cache", "none")
+    driver.set("io", "native")
+    driver.set("discard", "unmap")
+
+    # Ensure <target> exists and set NVMe target
+    target = disk.find("target")
+    if target is None:
+        target = ET.SubElement(disk, "target")
+
+    target.set("dev", "sda")
+    target.set("bus", "scsi")
+    target.set("rotation_rate", "1")
+
+    # Remove drive-style address (SATA/SCSI) if present; NVMe is PCIe
+    for addr in list(disk.findall("address")):
+        if addr.get("type") == "drive":
+            disk.remove(addr)
+
+    # Create/update <serial> (libvirt requires serial for NVMe)
+    uuid_elem = root.find("uuid")
+    if uuid_elem is None or uuid_elem.text is None or uuid_elem.text.strip() == "":
+        print("Error: no <uuid> found (virt-install normally creates this)")
+        sys.exit(1)
+
+    vm_uuid = uuid_elem.text.strip()
+    digest = hashlib.sha256(vm_uuid.encode("utf-8")).hexdigest()
+    serial_value = "S5G" + digest[0:17]  # 20 chars total
+
+    serial = disk.find("serial")
+    if serial is None:
+        serial = ET.SubElement(disk, "serial")
+    serial.text = serial_value
+
+    vendor = disk.find("vendor")
+    if vendor is None:
+      vendor = ET.SubElement(disk, "vendor")
+    vendor.text = "Samsung"
+
+    product = disk.find("product")
+    if product is None:
+      vendor = ET.SubElement(disk, "product")
+    vendor.text = "980 Pro"
+
 # -----------------------------
 # NVME emulation
 # -----------------------------
@@ -115,15 +189,15 @@ def nvme_emulation():
         print("Error: no <devices> element found")
         sys.exit(1)
 
-    # Remove existing NVMe controllers (so we can re-add cleanly every run)
-    for ctrl in list(devices.findall("controller")):
-        if ctrl.get("type") == "nvme":
-            devices.remove(ctrl)
+    # Remove existing NVMe controllers
+    for controller in list(devices.findall("controller")):
+        if controller.get("type") == "nvme":
+            devices.remove(controller)
 
-    # Add NVMe controller (your libvirt expects it)
+    # Add NVMe controller
     ET.SubElement(devices, "controller", {"type": "nvme", "index": "0"})
 
-    # Find the first real disk in the VM (usually the boot disk)
+    # Find the first real disk in the VM
     disk = None
     for d in devices.findall("disk"):
         if d.get("device") == "disk":
@@ -168,10 +242,10 @@ def nvme_emulation():
     digest = hashlib.sha256(vm_uuid.encode("utf-8")).hexdigest()
     serial_value = "S5G" + digest[0:17]  # 20 chars total
 
-    serial_elem = disk.find("serial")
-    if serial_elem is None:
-        serial_elem = ET.SubElement(disk, "serial")
-    serial_elem.text = serial_value
+    serial = disk.find("serial")
+    if serial is None:
+        serial = ET.SubElement(disk, "serial")
+    serial.text = serial_value
 
 def looking_glass():
     # SPICE audio (top-level, idempotent)
@@ -261,7 +335,8 @@ def transparency_optimization():
 huge_pages()
 cpu_layout()
 cpu_pinning()
-nvme_emulation()
+#nvme_emulation()
+scsi()
 if virtual_machine_preset == "performance_transparent":
     transparency_optimization()
 looking_glass()
