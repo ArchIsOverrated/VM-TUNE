@@ -2,6 +2,7 @@
 import sys
 import xml.etree.ElementTree as ET
 import hashlib
+import data
 
 if len(sys.argv) != 6:
     print("Usage: configure_xml.py <xml-path> <cpu-list> <emulator-cpu-list> <cpu-vendor> <preset>")
@@ -17,10 +18,16 @@ preset_options = ["performance","performance_transparent"]
 virtual_machine_preset = preset_options[int(preset)-1]
 
 cpus = [c.strip() for c in cpu_list_str.split(",") if c.strip()]
-print(cpus)
 
 tree = ET.parse(xml_path)
 root = tree.getroot()
+
+
+def deterministic_random(data, clamp):
+    h = hashlib.sha256(data.encode("utf-8")).digest()
+    value = int.from_bytes(h,"big")
+    return value % clamp
+    
 
 # -----------------------------
 # Add <memoryBacking><hugepages/>
@@ -169,15 +176,22 @@ def scsi():
         serial = ET.SubElement(disk, "serial")
     serial.text = serial_value
 
+    number_ssd_brands = len(data.ssd_models)
+    chosen_model = data.ssd_models[deterministic_random(vm_uuid,number_ssd_brands)]
+    chosen_vendor = chosen_model.get("vendor")
+    products = chosen_model.get("models")
+    number_of_products = len(products)
+    chosen_product = products[deterministic_random(vm_uuid,number_of_products)]
+
     vendor = disk.find("vendor")
     if vendor is None:
       vendor = ET.SubElement(disk, "vendor")
-    vendor.text = "Samsung"
+    vendor.text = chosen_vendor 
 
     product = disk.find("product")
     if product is None:
-      vendor = ET.SubElement(disk, "product")
-    vendor.text = "980 Pro"
+      product = ET.SubElement(disk, "product")
+    product.text = chosen_product 
 
 # -----------------------------
 # NVME emulation
