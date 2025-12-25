@@ -59,11 +59,21 @@ build_looking-glass() {
 
 configure_looking-glass() {
   echo "Configuring Looking Glass..."
-  echo "# Type Path               Mode UID  GID Age Argument" > /etc/tmpfiles.d/10-looking-glass.conf
-  echo "f /dev/shm/looking-glass 0660 $TARGET_USER qemu -" >> /etc/tmpfiles.d/10-looking-glass.conf
+  sudo bash -c "cat > /etc/tmpfiles.d/10-looking-glass.conf <<EOF
+# Type Path               Mode UID  GID Age Argument
+f /dev/shm/looking-glass 0660 $TARGET_USER qemu -
+EOF"
+  if sudo semanage fcontext -l | grep -q "^/dev/shm/looking-glass"; then
+    sudo semanage fcontext -m -t svirt_tmpfs_t /dev/shm/looking-glass
+  else
+    sudo semanage fcontext -a -t svirt_tmpfs_t /dev/shm/looking-glass
+  fi
+  if ! grep -q 'alias looking-glass="/home/'"$TARGET_USER"'/CustomFedora/src/looking-glass-B7/client/build/looking-glass-client"' \
+      "/home/$TARGET_USER/.bashrc"; then
+    echo 'alias looking-glass="/home/'"$TARGET_USER"'/CustomFedora/src/looking-glass-B7/client/build/looking-glass-client"' \
+      >> "/home/$TARGET_USER/.bashrc"
+  fi
   echo "Looking Glass installation completed."
-  sudo semanage fcontext -a -t svirt_tmpfs_t /dev/shm/looking-glass
-  echo "alias looking-glass=\"/home/$TARGET_USER/CustomFedora/src/looking-glass-B7/client/build/looking-glass-client\"" >> "/home/$TARGET_USER/.bashrc"
 }
 
 setup_looking-glass() {
