@@ -22,12 +22,10 @@ cpus = [c.strip() for c in cpu_list_str.split(",") if c.strip()]
 tree = ET.parse(xml_path)
 root = tree.getroot()
 
-
 def deterministic_random(data, clamp):
     h = hashlib.sha256(data.encode("utf-8")).digest()
     value = int.from_bytes(h,"big")
     return value % clamp
-    
 
 # -----------------------------
 # Add <memoryBacking><hugepages/>
