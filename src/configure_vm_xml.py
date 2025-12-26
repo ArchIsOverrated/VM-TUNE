@@ -206,58 +206,71 @@ def nvme_emulation():
         if controller.get("type") == "nvme":
             devices.remove(controller)
 
-    # Add NVMe controller
-    ET.SubElement(devices, "controller", {"type": "nvme", "index": "0"})
-
-    # Find the first real disk in the VM
-    disk = None
-    for d in devices.findall("disk"):
-        if d.get("device") == "disk":
-            disk = d
-            break
-
-    if disk is None:
-        print("Error: no <disk device='disk'> found")
-        sys.exit(1)
-
-    # Ensure <driver> exists and set performance-friendly options
-    driver = disk.find("driver")
-    if driver is None:
-        driver = ET.SubElement(disk, "driver")
-
-    driver.set("name", "qemu")
-    driver.set("type", "qcow2")
-    driver.set("cache", "none")
-    driver.set("io", "native")
-    driver.set("discard", "unmap")
-
-    # Ensure <target> exists and set NVMe target
-    target = disk.find("target")
-    if target is None:
-        target = ET.SubElement(disk, "target")
-
-    target.set("dev", "nvme0n1")
-    target.set("bus", "nvme")
-
-    # Remove drive-style address (SATA/SCSI) if present; NVMe is PCIe
-    for addr in list(disk.findall("address")):
-        if addr.get("type") == "drive":
-            disk.remove(addr)
-
-    # Create/update <serial> (libvirt requires serial for NVMe)
+    # Get VM UUID (used for serials)
     uuid_elem = root.find("uuid")
-    if uuid_elem is None or uuid_elem.text is None or uuid_elem.text.strip() == "":
+    if uuid_elem is None or not uuid_elem.text or uuid_elem.text.strip() == "":
         print("Error: no <uuid> found (virt-install normally creates this)")
         sys.exit(1)
 
     vm_uuid = uuid_elem.text.strip()
-    digest = hashlib.sha256(vm_uuid.encode("utf-8")).hexdigest()
-    serial_value = "S5G" + digest[0:17]  # 20 chars total
 
-    serial = disk.find("serial")
-    if serial is None:
-        serial = ET.SubElement(disk, "serial")
-    serial.text = serial_value
+    # Find all real disks
+    disk_elements = []
+    for disk_element in devices.findall("disk"):
+        if disk_element.get("device") == "disk":
+            disk_elements.append(disk_element)
+
+    if not disk_elements:
+        print("Error: no <disk device='disk'> found")
+        sys.exit(1)
+
+    # Process each disk
+    for disk_index, disk_element in enumerate(disk_elements):
+        # Add one NVMe controller per disk
+        ET.SubElement(
+            devices,
+            "controller",
+            {
+                "type": "nvme",
+                "index": str(disk_index),
+            },
+        )
+
+        # Ensure <driver> exists
+        driver = disk_element.find("driver")
+        if driver is None:
+            driver = ET.SubElement(disk_element, "driver")
+
+        driver.set("name", "qemu")
+        #driver.set("type", "qcow2")
+        driver.set("cache", "none")
+        driver.set("io", "native")
+        driver.set("discard", "unmap")
+
+        # Ensure <target> exists
+        target = disk_element.find("target")
+        if target is None:
+            target = ET.SubElement(disk_element, "target")
+
+        target.set("dev", f"nvme{disk_index}n1")
+        target.set("bus", "nvme")
+
+        # Remove drive-style address (SATA/SCSI)
+        for address_element in list(disk_element.findall("address")):
+            if address_element.get("type") == "drive":
+                disk_element.remove(address_element)
+
+        # Generate unique serial per disk
+        digest = hashlib.sha256(
+            f"{vm_uuid}-{disk_index}".encode("utf-8")
+        ).hexdigest()
+        serial_value = "S5G" + digest[0:17]  # 20 chars total
+
+        serial = disk_element.find("serial")
+        if serial is None:
+            serial = ET.SubElement(disk_element, "serial")
+        serial.text = serial_value
+
 
 def looking_glass():
     # SPICE audio (top-level, idempotent)
@@ -347,8 +360,8 @@ def transparency_optimization():
 huge_pages()
 cpu_layout()
 cpu_pinning()
-#nvme_emulation()
-scsi()
+nvme_emulation()
+#scsi()
 if virtual_machine_preset == "performance_transparent":
     transparency_optimization()
 looking_glass()
