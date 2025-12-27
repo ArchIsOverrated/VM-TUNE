@@ -346,6 +346,24 @@ def transparency_optimization():
 
     hidden.set("state", "on")
 
+    hyperv = features.find("hyperv")
+
+    if hyperv is None:
+        hyperv = ET.SubElement(features, "hyperv")
+
+    vendor_id = hyperv.find("vendor_id")
+    if vendor_id is None:
+        vendor_id = ET.SubElement(hyperv, "vendor_id")
+
+    # choose vendor string based on cpu_vendor arg
+    if cpu_vendor.lower() == "amd":
+        vendor_value = "AuthenticAMD"
+    else:
+        vendor_value = "GenuineIntel"
+
+    vendor_id.set("state", "on")
+    vendor_id.set("value", vendor_value)
+
     # use real computer smbios
     os = root.find("os")
     if os is None:
