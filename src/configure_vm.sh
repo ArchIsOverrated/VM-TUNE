@@ -91,8 +91,11 @@ configure_xml() {
   read -rp "Enter comma-separated for emulator CPU IDs to pin to (example: 1,13): " EMULATOR_LIST
 
   echo "There are multiple presets you can choose for your virtual machine."
-  echo "1) Performance: Tuned VM with hooks, cpu isolation and huge pages."
-  echo "2) Performance Transparent: This preset comes with enhanced VM transparency capabilities without sacrificing the convenience of looking glass."
+  echo "Keep in mind that these presets are still in development so may not be perfect yet"
+  echo "1) Windows Optimized: Takes full advantage of paravirtualization to improve performance"
+  echo "2) Windows Disguised: Will attempt to hide your hypervisor, good for malware analysis"
+  #echo "3) Linux Optimized: Takes full advantage of paravirtualization to improve performance"
+  #echo "4) Linux Disguised: Will attempt to hide your hypervisor, good for malware analysis"
   read -rp "Enter your preset here as a number: " PRESET
 
   echo "Applying hugepages + CPU pinning to XML..."

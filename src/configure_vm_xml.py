@@ -14,7 +14,7 @@ emulator_list = sys.argv[3]
 cpu_vendor = sys.argv[4]
 preset = sys.argv[5]
 
-preset_options = ["performance","performance_transparent"]
+preset_options = ["WindowsOptimized","WindowsDisguised","LinuxOptimized","LinuxDisguised"]
 virtual_machine_preset = preset_options[int(preset)-1]
 
 cpus = [c.strip() for c in cpu_list_str.split(",") if c.strip()]
@@ -327,20 +327,6 @@ def transparency_optimization():
         print("Error: no <cpu> element found")
         sys.exit(1)
 
-    # check if hypervisor feature already exists
-    feature_exists = False
-    for feature in cpu.findall("feature"):
-        if feature.get("name") == "hypervisor":
-            feature.set("policy", "disable")
-            feature_exists = True
-
-    # add it if it does not exist
-    if not feature_exists:
-        ET.SubElement(cpu, "feature", {
-            "policy": "disable",
-            "name": "hypervisor"
-        })
-
     #find features tag
     features = root.find("features")
     if features is None:
@@ -394,7 +380,7 @@ cpu_pinning()
 nvme_emulation()
 other_performance_optimizations()
 #scsi()
-if virtual_machine_preset == "performance_transparent":
+if virtual_machine_preset == "WindowsDisguised":
     transparency_optimization()
 looking_glass()
 
