@@ -259,6 +259,8 @@ def nvme_emulation():
         for address_element in list(disk_element.findall("address")):
             if address_element.get("type") == "drive":
                 disk_element.remove(address_element)
+            if address_element.get("type") == "pci":
+                disk_element.remove(address_element)
 
         # Generate unique serial per disk
         digest = hashlib.sha256(
