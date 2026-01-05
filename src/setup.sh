@@ -112,6 +112,7 @@ setup_desktop_environment() {
   curl \
   python \
   blueman \
+  kernel-tools \
   sddm -y
 
   #sed -i '/^installonly_limit=/d' /etc/dnf/dnf.conf
