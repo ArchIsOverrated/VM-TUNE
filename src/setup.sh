@@ -75,10 +75,6 @@ setup_virtualization_tools() {
 
   dnf group install --with-optional "virtualization" -y
 
-  dnf install tuned -y
-  systemctl enable --now tuned
-  tuned-adm profile virtual-host
-
   echo "Virtualization tools installed successfully."
 
   systemctl enable --now libvirtd
@@ -116,10 +112,11 @@ setup_desktop_environment() {
   curl \
   python \
   blueman \
+  kernel-tools \
   sddm -y
 
-  sed -i '/^installonly_limit=/d' /etc/dnf/dnf.conf
-  echo "installonly_limit=2" >> /etc/dnf/dnf.conf
+  #sed -i '/^installonly_limit=/d' /etc/dnf/dnf.conf
+  #echo "installonly_limit=2" >> /etc/dnf/dnf.conf
 
   systemctl enable sddm
   systemctl enable NetworkManager
@@ -143,7 +140,7 @@ setup_desktop_environment() {
 }
 
 update_system
-setup_snapshots
+#setup_snapshots
 setup_virtualization_tools
 setup_looking-glass
 setup_desktop_environment

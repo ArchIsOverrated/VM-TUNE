@@ -24,6 +24,13 @@ if [ "$EVENT" = "prepare" ] && [ "$PHASE" = "begin" ]; then
     fi
 fi
 
+#Before VM starts set cpu performance governer
+if [ "$EVENT" = "prepare" ] && [ "$PHASE" = "begin" ]; then
+    if [ -x "$LIB_DIR/performancegoverner.sh" ]; then
+        "$LIB_DIR/performancegoverner.sh" "performance"
+    fi
+fi
+
 # After VM stops -> remove hugepages
 if [ "$EVENT" = "release" ] && [ "$PHASE" = "end" ]; then
     if [ -x "$LIB_DIR/hugepages.sh" ]; then
@@ -35,5 +42,12 @@ fi
 if [ "$EVENT" = "release" ] && [ "$PHASE" = "end" ]; then
     if [ -x "$LIB_DIR/isolatecpus.sh" ]; then
         "$LIB_DIR/isolatecpus.sh" "$VM_NAME" "deisolate"
+    fi
+fi
+
+#After VM stops set cpu performance governer
+if [ "$EVENT" = "release" ] && [ "$PHASE" = "end" ]; then
+    if [ -x "$LIB_DIR/performancegoverner.sh" ]; then
+        "$LIB_DIR/performancegoverner.sh" "powersave"
     fi
 fi
