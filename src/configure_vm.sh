@@ -52,6 +52,9 @@ configure_hooks() {
   if [[ ! -d "$VM_DIR" ]]; then
     mkdir -p "$VM_DIR"
   fi
+
+  #restart libvirtd
+  systemctl restart libvirtd
 }
 
 configure_xml() {
