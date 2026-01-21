@@ -27,6 +27,7 @@ VM_NAME="$1"
 HOOKS_DIR="/etc/libvirt/hooks"
 QEMU_HOOKS_DIR="$HOOKS_DIR/qemu.d"
 VM_DIR="$QEMU_HOOKS_DIR/$VM_NAME"
+BATTERY_FILE="/var/lib/libvirt/images/fakebattery.dsl"
 XML_PATH="/etc/libvirt/qemu/${VM_NAME}.xml"
 
 detect_cpu_vendor() {
@@ -51,6 +52,21 @@ configure_hooks() {
   # Create per-VM directory
   if [[ ! -d "$VM_DIR" ]]; then
     mkdir -p "$VM_DIR"
+  fi
+
+  systemctl restart libvirtd
+}
+
+configure_gaming_laptop() {
+  if [[ ! -f "$BATTERY_FILE" ]]; then
+    read -rp "Are you using an ASUS gaming laptop? (y for yes / n for no): " ASUS_LAPTOP
+
+    if [[ "$ASUS_LAPTOP" == "y" || "$ASUS_LAPTOP" == "1" ]]; then
+      echo "Special optimizations will be applied."
+      cp fakebattery.dsl /var/lib/libvirt/images/
+    else
+      echo "No ASUS laptop detected. Skipping ASUS-specific tweaks."
+    fi
   fi
 }
 
@@ -90,12 +106,17 @@ configure_xml() {
   echo "Usually 2 threads is enough, 4 if you have many usb devices passed in"
   read -rp "Enter comma-separated for emulator CPU IDs to pin to (example: 1,13): " EMULATOR_LIST
 
+  if [[ -f "$BATTERY_FILE" ]]; then
+    read -rp "Do you want to apply the asus laptop optimizations? y for yes n for no or 1 for yes 0 for no: " IS_LAPTOP
+  else
+    IS_LAPTOP=0
+  fi
+
   echo "There are multiple presets you can choose for your virtual machine."
   echo "Keep in mind that these presets are still in development so may not be perfect yet"
   echo "1) Windows Optimized: Takes full advantage of paravirtualization to improve performance"
   echo "2) Windows Disguised: Will attempt to hide your hypervisor, good for malware analysis"
-  #echo "3) Linux Optimized: Takes full advantage of paravirtualization to improve performance"
-  #echo "4) Linux Disguised: Will attempt to hide your hypervisor, good for malware analysis"
+
   read -rp "Enter your preset here as a number: " PRESET
 
   echo "Applying hugepages + CPU pinning to XML..."
@@ -103,15 +124,17 @@ configure_xml() {
   echo "DEBUG: CPU_LIST='$CPU_LIST'"
   echo "DEBUG: EMULATOR_LIST='$EMULATOR_LIST'"
   echo "DEBUG: CPU_VENDOR='$CPU_VENDOR'"
+  echo "DEBUG: IS_LAPTOP='$IS_LAPTOP'"
   echo "DEBUG: PRESET='$PRESET'"
 
-  python3 configure_vm_xml.py "$XML_PATH" "$CPU_LIST" "$EMULATOR_LIST" "$CPU_VENDOR" "$PRESET"
+  python3 configure_vm_xml.py "$XML_PATH" "$CPU_LIST" "$EMULATOR_LIST" "$CPU_VENDOR" "$IS_LAPTOP" "$PRESET"
 
   virsh define "$XML_PATH"
   echo "XML updated successfully."
 }
 
 configure_hooks
+configure_gaming_laptop
 configure_xml
 
 echo

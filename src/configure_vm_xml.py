@@ -4,15 +4,22 @@ import xml.etree.ElementTree as ET
 import hashlib
 import data
 
-if len(sys.argv) != 6:
-    print("Usage: configure_xml.py <xml-path> <cpu-list> <emulator-cpu-list> <cpu-vendor> <preset>")
+if len(sys.argv) != 7:
+    print("Usage: configure_xml.py <xml-path> <cpu-list> <emulator-cpu-list> <cpu-vendor> <is-laptop> <preset>")
     sys.exit(1)
 
 xml_path = sys.argv[1]
 cpu_list_str = sys.argv[2]
 emulator_list = sys.argv[3]
 cpu_vendor = sys.argv[4]
-preset = sys.argv[5]
+is_laptop = sys.argv[5]
+preset = sys.argv[6]
+print(xml_path)
+print(cpu_list_str)
+print(emulator_list)
+print(cpu_vendor)
+print(is_laptop)
+print(preset)
 
 preset_options = ["WindowsOptimized","WindowsDisguised","LinuxOptimized","LinuxDisguised"]
 virtual_machine_preset = preset_options[int(preset)-1]
@@ -376,6 +383,25 @@ def transparency_optimization():
         smbios = ET.SubElement(os,"smbios")
     smbios.set("mode","host")
 
+def asus_laptop_stuff():
+    # Add xmlns:qemu to <domain> if not present
+    if "xmlns:qemu" not in root.attrib:
+        root.set("xmlns:qemu", "http://libvirt.org/schemas/domain/qemu/1.0")
+
+    # Find existing qemu:commandline
+    ns = {"qemu": "http://libvirt.org/schemas/domain/qemu/1.0"}
+    cmdline = root.find("qemu:commandline", ns)
+    if cmdline is None:
+        cmdline = ET.SubElement(root, "{http://libvirt.org/schemas/domain/qemu/1.0}commandline")
+
+    # Remove previous args if they exist to be idempotent
+    for arg in cmdline.findall("{http://libvirt.org/schemas/domain/qemu/1.0}arg"):
+        cmdline.remove(arg)
+
+    # Add the two required args
+    ET.SubElement(cmdline, "{http://libvirt.org/schemas/domain/qemu/1.0}arg", {"value": "-acpitable"})
+    ET.SubElement(cmdline, "{http://libvirt.org/schemas/domain/qemu/1.0}arg", {"value": "file=/var/lib/libvirt/images/fakebattery.dsl"})    
+
 huge_pages()
 cpu_layout()
 cpu_pinning()
@@ -384,6 +410,9 @@ other_performance_optimizations()
 #scsi()
 if virtual_machine_preset == "WindowsDisguised":
     transparency_optimization()
+if is_laptop == "y" or is_laptop == "1":
+    asus_laptop_stuff()
+
 looking_glass()
 
 tree.write(xml_path)
