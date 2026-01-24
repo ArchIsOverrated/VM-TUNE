@@ -10,6 +10,25 @@ fi
 trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" | tee -a ./setup.log >&2' ERR
 
 TARGET_USER="${SUDO_USER:-$USER}"
+DISTRO="unknown"
+
+detect_distro() {
+  local STRING=$(cat /etc/os-release)
+  shopt -s nocasematch
+
+  if [[ "$STRING" == *fedora* ]]; then
+    echo "Fedora detected"
+    DISTRO="Fedora"
+  else
+    echo "Supported distro not detected..."
+    echo "exiting"
+    DISTRO="Unknown"
+    shopt -u nocasematch
+    exit 1
+  fi
+
+  shopt -u nocasematch
+}
 
 update_system() {
   echo "Starting system update..."
@@ -143,6 +162,6 @@ update_system
 #setup_snapshots
 setup_virtualization_tools
 setup_looking-glass
-setup_desktop_environment
+#setup_desktop_environment
 echo "Setup completed successfully."
 echo "Please reboot your system to apply all changes."

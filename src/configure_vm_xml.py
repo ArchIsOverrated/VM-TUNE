@@ -400,7 +400,7 @@ def asus_laptop_stuff():
 
     # Add the two required args
     ET.SubElement(cmdline, "{http://libvirt.org/schemas/domain/qemu/1.0}arg", {"value": "-acpitable"})
-    ET.SubElement(cmdline, "{http://libvirt.org/schemas/domain/qemu/1.0}arg", {"value": "file=/var/lib/libvirt/images/fakebattery.dsl"})    
+    ET.SubElement(cmdline, "{http://libvirt.org/schemas/domain/qemu/1.0}arg", {"value": "file=/var/lib/libvirt/images/fakebattery.aml"})    
 
 huge_pages()
 cpu_layout()

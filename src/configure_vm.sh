@@ -63,7 +63,7 @@ configure_gaming_laptop() {
 
     if [[ "$ASUS_LAPTOP" == "y" || "$ASUS_LAPTOP" == "1" ]]; then
       echo "Special optimizations will be applied."
-      cp fakebattery.dsl /var/lib/libvirt/images/
+      cp fakebattery.aml /var/lib/libvirt/images/
     else
       echo "No ASUS laptop detected. Skipping ASUS-specific tweaks."
     fi
