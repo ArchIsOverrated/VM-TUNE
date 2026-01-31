@@ -24,12 +24,14 @@ build_looking-glass() {
     libdecor-devel \
     pipewire-devel libsamplerate-devel
 
-
     URL="https://looking-glass.io/artifact/stable/source"
     OUT="looking-glass.tar.gz"
 
-    echo "Downloading Looking Glass..."
-    curl -L "$URL" -o "$OUT"
+    # Check if already exists
+    if [[ ! -f "$OUT" ]]; then
+      echo "Downloading Looking Glass..."
+    	curl -L "$URL" -o "$OUT"
+    fi
 
     # Check non-empty
     if [[ ! -s "$OUT" ]]; then
@@ -37,27 +39,45 @@ build_looking-glass() {
         exit 1
     fi
 
+    # Checks to see if gzip compressed archive
     if ! file "$OUT" | grep -q "gzip compressed data"; then
         echo "ERROR: File is not a valid gzip archive."
         exit 1
     fi
 
-    echo "Extracting Looking Glass..."
-    tar -xzf "$OUT"
-    cd looking-glass-*/
-    
-    mkdir -p client/build
-    cd client/build
-    cmake ../ \
-      -DENABLE_X11=OFF \
-      -DENABLE_WAYLAND=ON \
-      -DENABLE_PIPEWIRE=ON \
-      -DENABLE_PULSEAUDIO=OFF
+    # Extract folder name safely
+    EXTRACTED_DIR=$(ls looking-glass* | head -1)
 
-    make
+
+    # Extract if folder doesn't exist
+    if [[ ! -d "$EXTRACTED_DIR" ]]; then
+        echo "Extracting Looking Glass..."
+        tar -xzf "$OUT"
+    fi
+
+
+    #checks to see if it was already built if not then build
+    if ! compgen -G "looking-glass-*/client/build/looking-glass-client" > /dev/null; then
+      
+      cd looking-glass*/
+
+      mkdir -p ./client/build
+
+      cd ./client/build
+
+      cmake ../ \
+        -DENABLE_X11=OFF \
+        -DENABLE_WAYLAND=ON \
+        -DENABLE_PIPEWIRE=ON \
+        -DENABLE_PULSEAUDIO=OFF
+
+      make
+      
+      cd ../../../
+    fi
 }
 
-configure_looking-glass() {
+install_looking-glass() {
   echo "Configuring Looking Glass..."
   sudo bash -c "cat > /etc/tmpfiles.d/10-looking-glass.conf <<EOF
 # Type Path               Mode UID  GID Age Argument
@@ -68,17 +88,23 @@ EOF"
   else
     sudo semanage fcontext -a -t svirt_tmpfs_t /dev/shm/looking-glass
   fi
-  if ! grep -q 'alias looking-glass="/home/'"$TARGET_USER"'/CustomFedora/src/looking-glass-B7/client/build/looking-glass-client"' \
-      "/home/$TARGET_USER/.bashrc"; then
-    echo 'alias looking-glass="/home/'"$TARGET_USER"'/CustomFedora/src/looking-glass-B7/client/build/looking-glass-client"' \
-      >> "/home/$TARGET_USER/.bashrc"
-  fi
+
+  cp looking-glass-*/client/build/looking-glass-client /usr/local/bin/looking-glass
+
   echo "Looking Glass installation completed."
+}
+
+cleanup_looking-glass() {
+  echo "Performing cleanup tasks"
+  rm -rf looking-glass*
+  echo "Cleanup done. Looking-glass is now installed"
 }
 
 setup_looking-glass() {
   build_looking-glass
-  configure_looking-glass
+  install_looking-glass
+  cleanup_looking-glass
 }
+
+
 setup_looking-glass
-build_looking-glass
