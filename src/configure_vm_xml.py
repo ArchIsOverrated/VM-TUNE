@@ -57,6 +57,11 @@ def cpu_layout():
         print("Error: your xml is broken there is no cpu defined!")
         sys.exit(1)
 
+    vcpu = root.find("vcpu")
+    if vcpu is None:
+        print("Error: your xml is broken there is no cpu defined!")
+        sys.exit(1)
+
     # Remove existing topology (idempotent)
     for topo in cpu.findall("topology"):
         cpu.remove(topo)
@@ -71,7 +76,9 @@ def cpu_layout():
     threads = 2
     cores = total_vcpus // threads
 
-    topology = ET.SubElement(cpu, "topology", {
+    vcpu.text = str(total_vcpus)
+
+    ET.SubElement(cpu, "topology", {
         "sockets": "1",
         "dies": "1",
         "clusters": "1",
@@ -85,6 +92,7 @@ def cpu_layout():
             "policy": "require",
             "name": "topoext"
         })
+    
     
 # -----------------------------
 # CPU pinning
