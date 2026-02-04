@@ -11,7 +11,18 @@ trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" | tee -a ./insta
 
 TARGET_USER="${SUDO_USER:-$USER}"
 
-build_looking-glass() {
+usage() {
+  echo "Usage: $0 -b -i"
+  echo
+  echo "This script will build and install looking-glass on your system."
+  echo
+  echo "Arguments:"
+  echo "  -b will build looking-glass for you."
+  echo "  -i will install looking-glass to /usr/local/bin"
+  exit 1
+}
+
+build_looking_glass() {
   echo "Starting installation of Looking Glass..."
   dnf install -y \
     cmake gcc gcc-c++ \
@@ -77,7 +88,7 @@ build_looking-glass() {
     fi
 }
 
-install_looking-glass() {
+install_looking_glass() {
   echo "Configuring Looking Glass..."
   sudo bash -c "cat > /etc/tmpfiles.d/10-looking-glass.conf <<EOF
 # Type Path               Mode UID  GID Age Argument
@@ -94,17 +105,31 @@ EOF"
   echo "Looking Glass installation completed."
 }
 
-cleanup_looking-glass() {
+cleanup_looking_glass() {
   echo "Performing cleanup tasks"
   rm -rf looking-glass*
   echo "Cleanup done. Looking-glass is now installed"
 }
 
-setup_looking-glass() {
-  build_looking-glass
-  install_looking-glass
-  cleanup_looking-glass
-}
+# parses the arguments
+while getopts ":hbi" opt; do
+  case "$opt" in
+    h)
+      usage
+      exit 0
+      ;;
+    b)
+      build_looking_glass
+      ;;
+    i)
+      install_looking_glass
+      cleanup_looking_glass
+      ;;
+    \?)
+      error "Unknown option: -$OPTARG"
+    ;;
+  esac
+done
 
 
-setup_looking-glass
+
