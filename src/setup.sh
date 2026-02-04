@@ -105,14 +105,14 @@ setup_virtualization_tools() {
   echo "User $TARGET_USER added to libvirt group."
 }
 
-setup_looking-glass() {
+setup_looking_glass() {
   if [ ! -f ./install_looking-glass.sh ]; then
     echo "ERROR: install_looking-glass.sh not found."
     exit 1
   fi
 
   echo "Running Looking Glass installer..."
-  ./install_looking-glass.sh
+  ./install_looking-glass.sh -bi
   echo "Looking Glass installation completed."
 }
 
@@ -161,7 +161,7 @@ setup_desktop_environment() {
 update_system
 #setup_snapshots
 setup_virtualization_tools
-setup_looking-glass
+setup_looking_glass
 #setup_desktop_environment
 echo "Setup completed successfully."
 echo "Please reboot your system to apply all changes."

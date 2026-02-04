@@ -59,13 +59,11 @@ build_looking_glass() {
     # Extract folder name safely
     EXTRACTED_DIR=$(ls looking-glass* | head -1)
 
-
     # Extract if folder doesn't exist
     if [[ ! -d "$EXTRACTED_DIR" ]]; then
         echo "Extracting Looking Glass..."
         tar -xzf "$OUT"
     fi
-
 
     #checks to see if it was already built if not then build
     if ! compgen -G "looking-glass-*/client/build/looking-glass-client" > /dev/null; then
