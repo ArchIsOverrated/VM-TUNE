@@ -9,26 +9,27 @@ fi
 
 trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" | tee -a ./configure_vm.log >&2' ERR
 
-usage() {
-  echo "Usage: $0 <vm-name>"
-  echo
-  echo "This script configures libvirt hooks and XML for the specified VM."
-  echo
-  echo "Arguments:"
-  echo "  vm-name    The name of the virtual machine to configure."
-  exit 1
+chooseVM() {
+  local -a VMs
+  local -i index
+  index=1
+  mapfile -t VMs < <(virsh list --all | tail -n+3 | awk '{print $2}' | head -n-1)
+
+  echo "Your virtual machines are:"
+
+  for t in ${VMs[@]}; do
+    echo "$index) $t"
+    ((index++))
+  done
+
+  local -i CHOSEN_VM
+  read -rp "Enter a number to choose a virtual machine you would like to configure: " CHOSEN_VM
+
+  ((CHOSEN_VM--))
+
+  VM_NAME=${VMs[$CHOSEN_VM]}
+
 }
-
-if [[ "${1:-}" == "-h" || $# -lt 1 ]]; then
-  usage
-fi
-
-VM_NAME="$1"
-HOOKS_DIR="/etc/libvirt/hooks"
-QEMU_HOOKS_DIR="$HOOKS_DIR/qemu.d"
-VM_DIR="$QEMU_HOOKS_DIR/$VM_NAME"
-BATTERY_FILE="/var/lib/libvirt/images/fakebattery.dsl"
-XML_PATH="/etc/libvirt/qemu/${VM_NAME}.xml"
 
 detect_cpu_vendor() {
   local vendor
@@ -132,6 +133,17 @@ configure_xml() {
   virsh define "$XML_PATH"
   echo "XML updated successfully."
 }
+
+
+VM_NAME=""
+
+chooseVM
+
+HOOKS_DIR="/etc/libvirt/hooks"
+QEMU_HOOKS_DIR="$HOOKS_DIR/qemu.d"
+VM_DIR="$QEMU_HOOKS_DIR/$VM_NAME"
+BATTERY_FILE="/var/lib/libvirt/images/fakebattery.dsl"
+XML_PATH="/etc/libvirt/qemu/${VM_NAME}.xml"
 
 configure_hooks
 configure_gaming_laptop
