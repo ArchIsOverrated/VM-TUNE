@@ -10,6 +10,25 @@ fi
 trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" | tee -a ./setup.log >&2' ERR
 
 TARGET_USER="${SUDO_USER:-$USER}"
+DISTRO="unknown"
+
+detect_distro() {
+  local STRING=$(cat /etc/os-release)
+  shopt -s nocasematch
+
+  if [[ "$STRING" == *fedora* ]]; then
+    echo "Fedora detected"
+    DISTRO="Fedora"
+  else
+    echo "Supported distro not detected..."
+    echo "exiting"
+    DISTRO="Unknown"
+    shopt -u nocasematch
+    exit 1
+  fi
+
+  shopt -u nocasematch
+}
 
 update_system() {
   echo "Starting system update..."
@@ -86,14 +105,14 @@ setup_virtualization_tools() {
   echo "User $TARGET_USER added to libvirt group."
 }
 
-setup_looking-glass() {
+setup_looking_glass() {
   if [ ! -f ./install_looking-glass.sh ]; then
     echo "ERROR: install_looking-glass.sh not found."
     exit 1
   fi
 
   echo "Running Looking Glass installer..."
-  ./install_looking-glass.sh
+  ./install_looking-glass.sh -bi
   echo "Looking Glass installation completed."
 }
 
@@ -142,7 +161,7 @@ setup_desktop_environment() {
 update_system
 #setup_snapshots
 setup_virtualization_tools
-setup_looking-glass
-setup_desktop_environment
+setup_looking_glass
+#setup_desktop_environment
 echo "Setup completed successfully."
 echo "Please reboot your system to apply all changes."
