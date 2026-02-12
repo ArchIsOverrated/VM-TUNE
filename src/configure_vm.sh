@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 if [[ $EUID -ne 0 ]]; then
   echo "Please run this script with sudo:"
-  echo "  sudo $0 <vm-name>"
+  echo "  sudo $0
   exit 1
 fi
 
@@ -89,8 +89,8 @@ configure_xml() {
     echo "Unknown CPU vendor. Exiting."
     exit 1
   fi
-  echo
 
+  echo
   echo "The above shows the CPU threads grouped by physical core."
   echo "When pinning threads its best to keep all threads of a physical core together."
   echo "For example, on Intel systems '0-1' means threads 0 and 1 belong to the same physical core."
@@ -105,6 +105,7 @@ configure_xml() {
   echo
   echo "For this one I recommend different cpu from the one that you entered for the CPU pin for the VM"
   echo "Usually 2 threads is enough, 4 if you have many usb devices passed in"
+  echo
   read -rp "Enter comma-separated for emulator CPU IDs to pin to (example: 1,13): " EMULATOR_LIST
 
   if [[ -f "$BATTERY_FILE" ]]; then

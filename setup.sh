@@ -106,13 +106,13 @@ setup_virtualization_tools() {
 }
 
 setup_looking_glass() {
-  if [ ! -f ./install_looking-glass.sh ]; then
+  if [ ! -f ./src/install_looking-glass.sh ]; then
     echo "ERROR: install_looking-glass.sh not found."
     exit 1
   fi
 
   echo "Running Looking Glass installer..."
-  ./install_looking-glass.sh -bi
+  ./src/install_looking-glass.sh -bi
   echo "Looking Glass installation completed."
 }
 
