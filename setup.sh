@@ -11,6 +11,9 @@ trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" | tee -a ./setup
 
 TARGET_USER="${SUDO_USER:-$USER}"
 DISTRO="unknown"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="/usr/local/lib/VMTUNE"
+INSTALL_DIR="/usr/local/bin/"
 
 detect_distro() {
   local STRING=$(cat /etc/os-release)
@@ -116,6 +119,21 @@ setup_looking_glass() {
   echo "Looking Glass installation completed."
 }
 
+setup_VMTUNE() {
+  echo "Installing the VMTUNE tool now..."
+
+  echo "making $LIB_DIR/src folder"
+  mkdir -p "$LIB_DIR/src"
+  echo "making $LIB_DIR/assets folder"
+  mkdir -p "$LIB_DIR/assets"
+  echo "copying files over to $LIB_DIR"
+  cp -r "$SCRIPT_DIR/src" "$LIB_DIR/src"
+  cp -r "$SCRIPT_DIR/assets" "$LIB_DIR/assets"
+
+  echo "copying to $INSTALL_DIR"
+  cp "$SCRIPT_DIR/bin/vmtune.sh" "$INSTALL_DIR"
+}
+
 setup_desktop_environment() {
   echo "Starting installation of desktop environment..."
 
@@ -159,9 +177,9 @@ setup_desktop_environment() {
 }
 
 update_system
-#setup_snapshots
 setup_virtualization_tools
 setup_looking_glass
-#setup_desktop_environment
+setup_VMTUNE
+
 echo "Setup completed successfully."
 echo "Please reboot your system to apply all changes."
