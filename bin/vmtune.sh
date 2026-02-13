@@ -12,28 +12,7 @@ trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" | tee -a ./vmtun
 TARGET_USER="${SUDO_USER:-$USER}"
 LIB_DIR="/usr/local/lib/"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEV_MODE=""
-
-# parses the arguments
-while getopts ":hd" opt; do
-  case "$opt" in
-    h)
-      usage
-      exit 0
-      ;;
-    d)
-      DEV_MODE="true"
-      ;;
-    \?)
-      error "Unknown option: -$OPTARG"
-    ;;
-  esac
-done
-
-if [ "$DEV_MODE" = "true" ]; then
-  LIB_DIR="$SCRIPT_DIR/../src"
-  echo $LIB_DIR
-fi
+DEV_MODE="false"
 
 usage() {
     echo "Usage: $0 [global options] <command> [command options]"
@@ -56,6 +35,60 @@ usage() {
     echo "Examples:"
     echo "  $0 looking_glass -b          Build Looking Glass"
     echo "  $0 looking_glass -i -d       Install in dev mode"
-    echo "  $0 create -d                 Run create wizard in dev mode"
     exit 1
 }
+
+parse_args() {
+
+    # --- Parse global options ---
+    while [[ "$1" == -* ]]; do
+        case "$1" in
+            -d) DEV_MODE=1 ;;
+            *) echo "Unknown global option: $1"; usage ;;
+        esac
+        shift
+    done
+
+    # --- Subcommand ---
+    cmd="$1"
+    shift || true
+
+    case "$cmd" in
+        configure)
+            echo "Running configure wizard (DEV_MODE=$DEV_MODE)"
+            ;;
+        create)
+            echo "Running create wizard (DEV_MODE=$DEV_MODE)"
+            ;;
+        looking_glass)
+            BUILD=0
+            INSTALL=0
+            while getopts "bi" opt; do
+                case "$opt" in
+                    b) BUILD=1 ;;
+                    i) INSTALL=1 ;;
+                    \?) echo "Invalid option for looking_glass: -$OPTARG"; usage ;;
+                esac
+            done
+            shift $((OPTIND-1))
+            echo "Looking Glass options: BUILD=$BUILD INSTALL=$INSTALL DEV_MODE=$DEV_MODE"
+            ;;
+        passthrough)
+            echo "Running passthrough wizard (DEV_MODE=$DEV_MODE)"
+            ;;
+        *)
+            echo "Unknown command: $cmd"
+            usage
+            ;;
+    esac
+}
+
+parse_args $@
+# parses the arguments
+# if -d set devmode to true
+
+if [[ "$DEV_MODE" = "1" ]]; then
+  LIB_DIR="$SCRIPT_DIR/../src"
+  echo $LIB_DIR
+fi
+
