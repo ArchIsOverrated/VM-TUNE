@@ -12,11 +12,11 @@ trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" | tee -a ./insta
 TARGET_USER="${SUDO_USER:-$USER}"
 
 usage() {
-  echo "Usage: $0 -b -i"
+  echo "Usage: $0 [options]"
   echo
   echo "This script will build and install looking-glass on your system."
   echo
-  echo "Arguments:"
+  echo "options:"
   echo "  -b will build looking-glass for you."
   echo "  -i will install looking-glass to /usr/local/bin"
   exit 1
