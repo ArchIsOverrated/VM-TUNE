@@ -131,7 +131,7 @@ setup_VMTUNE() {
   echo "copying files over to $LIB_DIR"
   cp -r "$SCRIPT_DIR/src" "$LIB_DIR/src"
   cp -r "$SCRIPT_DIR/assets" "$LIB_DIR/assets"
-  cp -r "$SCRIPT_DIR/hooks" "$SCRIPT_DIR"
+  cp -r "$SCRIPT_DIR/hooks" "$LIB_DIR/hooks"
 
   echo "copying to $INSTALL_DIR"
   cp "$SCRIPT_DIR/bin/vmtune.sh" "$INSTALL_DIR"
