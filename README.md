@@ -1,4 +1,4 @@
-# CustomFedora
+# VM-TUNE
 
 This repository contains a small collection of helper scripts I use to build and
 configure a custom Fedora VM environment (GPU passthrough, VM creation and a
