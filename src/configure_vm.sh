@@ -129,7 +129,7 @@ configure_xml() {
   echo "DEBUG: IS_LAPTOP='$IS_LAPTOP'"
   echo "DEBUG: PRESET='$PRESET'"
 
-  python3 configure_vm_xml.py "$XML_PATH" "$CPU_LIST" "$EMULATOR_LIST" "$CPU_VENDOR" "$IS_LAPTOP" "$PRESET"
+  python3 "$LIB_DIR/src/configure_vm_xml.py" "$XML_PATH" "$CPU_LIST" "$EMULATOR_LIST" "$CPU_VENDOR" "$IS_LAPTOP" "$PRESET"
 
   virsh define "$XML_PATH"
   echo "XML updated successfully."

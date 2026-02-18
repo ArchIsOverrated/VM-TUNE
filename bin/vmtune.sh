@@ -10,7 +10,7 @@ fi
 trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" | tee -a ./vmtune.log >&2' ERR
 
 TARGET_USER="${SUDO_USER:-$USER}"
-LIB_DIR="/usr/local/lib/"
+LIB_DIR="/usr/local/lib/VMTUNE"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEV_MODE="false"
 
@@ -30,7 +30,7 @@ usage() {
     echo "  -i                 Install Looking Glass"
     echo
     echo "Global options:"
-    echo "  -d                 Development mode (LIB_DIR points to repo instead of /usr/local/lib)"
+    echo "  -d                 Development mode (LIB_DIR points to repo instead of /usr/local/lib/VMTUNE)"
     echo
     echo "Examples:"
     echo "  $0 looking_glass -b          Build Looking Glass"
@@ -39,12 +39,22 @@ usage() {
 }
 
 parse_args() {
-
+    if [[ $# == 0 ]]; then
+        echo "no arguments provided"
+        usage
+    fi
     # --- Parse global options ---
-    while [[ "$1" == -* ]]; do
+    while [[ "${1:-}" == -* ]]; do
         case "$1" in
-            -d) DEV_MODE=1 ;;
-            *) echo "Unknown global option: $1"; usage ;;
+            -d)
+                DEV_MODE=1
+                LIB_DIR="$SCRIPT_DIR/../"
+                echo "LIB_DIR = $LIB_DIR"
+                ;;
+            *)
+                echo "Unknown global option: $1"
+                usage
+                ;;
         esac
         shift
     done
@@ -55,26 +65,30 @@ parse_args() {
 
     case "$cmd" in
         configure)
-            echo "Running configure wizard (DEV_MODE=$DEV_MODE)"
+            echo "executing configure_vm.sh"
+            "$LIB_DIR/src/configure_vm.sh" "$LIB_DIR"
             ;;
         create)
-            echo "Running create wizard (DEV_MODE=$DEV_MODE)"
+            echo "executing createvm.sh"
+            "$LIB_DIR/src/createvm.sh"
             ;;
         looking_glass)
-            BUILD=0
-            INSTALL=0
+            BUILD=""
+            INSTALL=""
             while getopts "bi" opt; do
                 case "$opt" in
-                    b) BUILD=1 ;;
-                    i) INSTALL=1 ;;
+                    b) BUILD="-b" ;;
+                    i) INSTALL="-i" ;;
                     \?) echo "Invalid option for looking_glass: -$OPTARG"; usage ;;
                 esac
             done
             shift $((OPTIND-1))
             echo "Looking Glass options: BUILD=$BUILD INSTALL=$INSTALL DEV_MODE=$DEV_MODE"
+            "$LIB_DIR/src/install_looking-glass.sh" "$BUILD" "$INSTALL"
             ;;
         passthrough)
             echo "Running passthrough wizard (DEV_MODE=$DEV_MODE)"
+            "$LIB_DIR/src/gpu_passthrough.sh"
             ;;
         *)
             echo "Unknown command: $cmd"
@@ -83,12 +97,5 @@ parse_args() {
     esac
 }
 
-parse_args $@
 # parses the arguments
-# if -d set devmode to true
-
-if [[ "$DEV_MODE" = "1" ]]; then
-  LIB_DIR="$SCRIPT_DIR/../src"
-  echo $LIB_DIR
-fi
-
+parse_args $@
