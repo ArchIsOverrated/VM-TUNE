@@ -126,9 +126,12 @@ setup_VMTUNE() {
   mkdir -p "$LIB_DIR/src"
   echo "making $LIB_DIR/assets folder"
   mkdir -p "$LIB_DIR/assets"
+  echo "making $LIB_DIR/hooks folder"
+  mkdir -p "$LIB_DIR"/hooks"
   echo "copying files over to $LIB_DIR"
   cp -r "$SCRIPT_DIR/src" "$LIB_DIR/src"
   cp -r "$SCRIPT_DIR/assets" "$LIB_DIR/assets"
+  cp -r "$SCRIPT_DIR/hooks" "$SCRIPT_DIR/hooks"
 
   echo "copying to $INSTALL_DIR"
   cp "$SCRIPT_DIR/bin/vmtune.sh" "$INSTALL_DIR"
