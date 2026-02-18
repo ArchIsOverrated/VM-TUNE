@@ -47,7 +47,7 @@ detect_cpu_vendor() {
 configure_hooks() {
   # Create hooks directory if needed
   if [[ ! -d "$HOOKS_DIR" ]]; then
-    cp -r "../hooks" "/etc/libvirt"
+    cp -r "$LIB_DIR/hooks" "/etc/libvirt"
   fi
 
   # Create per-VM directory
@@ -64,7 +64,7 @@ configure_gaming_laptop() {
 
     if [[ "$ASUS_LAPTOP" == "y" || "$ASUS_LAPTOP" == "1" ]]; then
       echo "Special optimizations will be applied."
-      cp fakebattery.aml /var/lib/libvirt/images/
+      cp "$LIB_DIR/assets/fakebattery.aml" "/var/lib/libvirt/images/"
     else
       echo "No ASUS laptop detected. Skipping ASUS-specific tweaks."
     fi
@@ -135,7 +135,7 @@ configure_xml() {
   echo "XML updated successfully."
 }
 
-
+LIB_DIR=$1
 VM_NAME=""
 
 chooseVM
