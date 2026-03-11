@@ -12,7 +12,7 @@ trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" | tee -a ./vmtun
 TARGET_USER="${SUDO_USER:-$USER}"
 LIB_DIR="/usr/local/lib/VMTUNE"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEV_MODE="false"
+DEV_MODE="0"
 
 usage() {
     echo "Usage: $0 [global options] <command> [command options]"

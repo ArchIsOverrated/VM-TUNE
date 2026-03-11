@@ -13,6 +13,8 @@ TARGET_USER="${SUDO_USER:-$USER}"
 DISTRO="unknown"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="/usr/local/lib/VMTUNE"
+POLKIT_DIR="/usr/share/polkit-1"
+
 INSTALL_DIR="/usr/local/bin/"
 
 detect_distro() {
@@ -121,6 +123,14 @@ setup_looking_glass() {
 
 setup_VMTUNE() {
   echo "Installing the VMTUNE tool now..."
+  echo "making $POLKIT_DIR/actions"
+  mkdir -p "$POLKIT_DIR/actions"
+  echo "making $POLKIT_DIR/rules.d"
+  mkdir -p "$POLKIT_DIR/rules.d"
+
+  echo "copying files over to $POLKIT_DIR"
+  cp -r "$SCRIPT_DIR/polkit/vmtune.policy" "$POLKIT_DIR/actions"
+  cp -r "$SCRIPT_DIR/polkit/50-vmtune.rules" "$POLKIT_DIR/rules.d"
 
   echo "making $LIB_DIR/src folder"
   mkdir -p "$LIB_DIR/src"
@@ -134,7 +144,10 @@ setup_VMTUNE() {
   cp -r "$SCRIPT_DIR/hooks" "$LIB_DIR"
 
   echo "copying to $INSTALL_DIR"
-  cp "$SCRIPT_DIR/bin/vmtune.sh" "$INSTALL_DIR"
+  cp -r "$SCRIPT_DIR/bin/vmtune" "$INSTALL_DIR"
+  cp -r "$SCRIPT_DIR/bin/vmtune.sh" "$INSTALL_DIR"
+
+  systemctl restart polkit
 }
 
 setup_desktop_environment() {
