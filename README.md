@@ -32,8 +32,8 @@ So these scripts here aren't really the main scripts you will interface with. Th
 - **`lib/performancegoverner.sh`**: This sets the cpu performance governor to performance when you start your virtual machine for maximum performance and likewise back to powersaving when you quit your virtual machine"
 
 **Config files**
-- **polkit/50-vmtune.rules**: This is a file that is installed to /usr/share/polkit-1/rules.d/ that defines how to apply the vmtune policy. It says if you are in the libvirt group then allow them to connect to the virtual machines using the policy.
-- **polkit/vmtune.policy**: For this file applies the actual policy that 50-vmtune.rules applies.
+- **`polkit/50-vmtune.rules`**: This is a file that is installed to /usr/share/polkit-1/rules.d/ that defines how to apply the vmtune policy. It says if you are in the libvirt group then allow them to connect to the virtual machines using the policy.
+- **`polkit/vmtune.policy`**: For this file applies the actual policy that 50-vmtune.rules applies.
 
 **How you can contribute**
 You can contribute by refining this documentation or adding new features or adding support for other distros on this since this script only supports RHEL based systems like Fedora.
