@@ -39,4 +39,4 @@ So these scripts here aren't really the main scripts you will interface with. Th
 You can contribute by refining this documentation or adding new features or adding support for other distros on this since this script only supports RHEL based systems like Fedora.
 
 **Warning**
-Do not run the virtual machine in the BTRFS file system it may be significantly more laggy
+Do not run the virtual machine in the BTRFS file system it may be significantly more laggy. If you chooose to proceed with using the BTRFS filesystem disable the Copy On Write where you intend to install your virtual machine images.
