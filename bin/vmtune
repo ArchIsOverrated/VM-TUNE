@@ -1,1 +1,1 @@
-pkexec vmtune.sh
+pkexec vmtune.sh "$@"
