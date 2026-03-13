@@ -9,44 +9,7 @@ fi
 
 trap 'echo "Error on line $LINENO while running: $BASH_COMMAND" | tee -a ./createvm.log >&2' ERR
 
-select_os_variant() {
-  echo "Select VM type:"
-  echo "  1) Windows 11 gaming VM"
-  echo "  2) Windows 10 gaming VM"
-  echo "  3) Linux VM"
-  read -r -p "Enter choice [1]: " CHOICE
-  CHOICE=${CHOICE:-1}
-
-  case "$CHOICE" in
-  1)
-    OS_VARIANT="win11"
-    ;;
-  2)
-    OS_VARIANT="win10"
-    ;;
-  3)
-    OS_VARIANT=""
-    ;;
-  4)
-    OS_VARIANT="generic"
-    ;;
-    esac
-}
-
-select_vm_name() {
-  read -r -p "Enter VM name: " VM_NAME
-  if [[ -z "$VM_NAME" ]]; then
-      echo "VM name cannot be empty. Exiting."
-      exit 1
-  fi
-}
-
 select_iso_path() {
-  read -r -p "Enter path to OS installation ISO: " ISO_PATH
-  if [[ ! -f "$ISO_PATH" ]]; then
-    echo "ISO file not found at $ISO_PATH. Exiting."
-    exit 1
-  fi
 
   REAL_USER="${SUDO_USER:-$USER}"
 
@@ -58,12 +21,6 @@ select_iso_path() {
     GROUP_PERMS=${HOME_PERMS:4:3}
 
     if [[ "$GROUP_PERMS" != *x* ]]; then
-      echo
-      echo "The ISO is inside $USER_HOME."
-      echo "QEMU needs group 'execute' permission on this directory to reach the ISO."
-      echo "Fixing it by running:"
-      echo "  chmod g+x \"$USER_HOME\""
-      echo
       chmod +x "$USER_HOME"
       fi
   fi
@@ -131,8 +88,6 @@ configure_vm() {
   ./configure_vm.sh "$VM_NAME"
 }
 
-select_os_variant
-select_vm_name
 select_iso_path
 select_disk_size
 select_ram_size
