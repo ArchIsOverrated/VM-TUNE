@@ -28,7 +28,6 @@ chooseVM() {
   ((CHOSEN_VM--))
 
   VM_NAME=${VMs[$CHOSEN_VM]}
-
 }
 
 detect_cpu_vendor() {
@@ -56,19 +55,6 @@ configure_hooks() {
   fi
 
   systemctl restart libvirtd
-}
-
-configure_gaming_laptop() {
-  if [[ ! -f "$BATTERY_FILE" ]]; then
-    read -rp "Are you using an ASUS gaming laptop? (y for yes / n for no): " ASUS_LAPTOP
-
-    if [[ "$ASUS_LAPTOP" == "y" || "$ASUS_LAPTOP" == "1" ]]; then
-      echo "Special optimizations will be applied."
-      cp "$LIB_DIR/assets/fakebattery.aml" "/var/lib/libvirt/images/"
-    else
-      echo "No ASUS laptop detected. Skipping ASUS-specific tweaks."
-    fi
-  fi
 }
 
 configure_xml() {
@@ -128,10 +114,13 @@ configure_xml() {
   echo "DEBUG: CPU_VENDOR='$CPU_VENDOR'"
   echo "DEBUG: IS_LAPTOP='$IS_LAPTOP'"
   echo "DEBUG: PRESET='$PRESET'"
-
-  python3 "$LIB_DIR/src/configure_vm_xml.py" "$XML_PATH" "$CPU_LIST" "$EMULATOR_LIST" "$CPU_VENDOR" "$IS_LAPTOP" "$PRESET"
-
-  virsh define "$XML_PATH"
+  "$LIB_DIR/src/core/configure_vm.sh" \
+    --libdir "$LIB_DIR" \
+    --vm "$VM_NAME" \
+    --cpu "$CPU_LIST" \
+    --emulator "$EMULATOR_LIST" \
+    --preset "$PRESET" \
+    --laptop "$IS_LAPTOP"
   echo "XML updated successfully."
 }
 
@@ -147,7 +136,6 @@ BATTERY_FILE="/var/lib/libvirt/images/fakebattery.dsl"
 XML_PATH="/etc/libvirt/qemu/${VM_NAME}.xml"
 
 configure_hooks
-configure_gaming_laptop
 configure_xml
 
 echo
