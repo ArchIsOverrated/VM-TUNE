@@ -121,6 +121,21 @@ setup_looking_glass() {
   echo "Looking Glass installation completed."
 }
 
+
+setup_gaming_laptop() {
+  if [[ ! -f "$BATTERY_FILE" ]]; then
+    read -rp "Are you using an ASUS gaming laptop? (y for yes / n for no): " ASUS_LAPTOP
+
+    if [[ "$ASUS_LAPTOP" == "y" || "$ASUS_LAPTOP" == "1" ]]; then
+      echo "Special optimizations will be applied."
+      cp "$SCRIPT_DIR/assets/fakebattery.aml" "/var/lib/libvirt/images/"
+    else
+      echo "No ASUS laptop detected. Skipping ASUS-specific tweaks."
+    fi
+  fi
+}
+
+
 setup_VMTUNE() {
   echo "Installing the VMTUNE tool now..."
   echo "making $POLKIT_DIR/actions"
@@ -195,6 +210,7 @@ setup_desktop_environment() {
 update_system
 setup_virtualization_tools
 setup_looking_glass
+setup_gaming_laptop
 setup_VMTUNE
 
 echo "Setup completed successfully."
