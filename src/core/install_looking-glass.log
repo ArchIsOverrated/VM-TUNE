@@ -1,0 +1,2 @@
+Error on line 107 while running: cut -f1 -d"/"
+Error on line 107 while running: EXTRACTED_DIR=$(tar -tzf "$OUT" | head -1 | cut -f1 -d"/")
