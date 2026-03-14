@@ -198,7 +198,7 @@ EOF
 
     echo "options vfio-pci ids=$SELECTED_GPU_IDS" > /etc/modprobe.d/vfio.conf
 
-    dracut --force
+    dracut --force -v
 
     echo "GPU passthrough enabled."
 
@@ -209,7 +209,7 @@ EOF
     rm -f /etc/modules-load.d/vfio.conf
     rm -f /etc/modprobe.d/vfio.conf
 
-    dracut --force
+    dracut --force -v
 
     echo "GPU passthrough disabled."
 
