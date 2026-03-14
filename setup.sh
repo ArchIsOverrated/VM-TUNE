@@ -14,6 +14,7 @@ DISTRO="unknown"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="/usr/local/lib/VMTUNE"
 POLKIT_DIR="/usr/share/polkit-1"
+BATTERY_FILE="/var/lib/libvirt/images/fakebattery.dsl"
 
 INSTALL_DIR="/usr/local/bin/"
 
@@ -111,15 +112,30 @@ setup_virtualization_tools() {
 }
 
 setup_looking_glass() {
-  if [ ! -f ./src/install_looking-glass.sh ]; then
+  if [ ! -f ./src/core/install_looking-glass.sh ]; then
     echo "ERROR: install_looking-glass.sh not found."
     exit 1
   fi
 
   echo "Running Looking Glass installer..."
-  ./src/install_looking-glass.sh -bi
+  ./src/core/install_looking-glass.sh --action full-install
   echo "Looking Glass installation completed."
 }
+
+
+setup_gaming_laptop() {
+  if [[ ! -f "$BATTERY_FILE" ]]; then
+    read -rp "Are you using an ASUS gaming laptop? (y for yes / n for no): " ASUS_LAPTOP
+
+    if [[ "$ASUS_LAPTOP" == "y" || "$ASUS_LAPTOP" == "1" ]]; then
+      echo "Special optimizations will be applied."
+      cp "$SCRIPT_DIR/assets/fakebattery.aml" "/var/lib/libvirt/images/"
+    else
+      echo "No ASUS laptop detected. Skipping ASUS-specific tweaks."
+    fi
+  fi
+}
+
 
 setup_VMTUNE() {
   echo "Installing the VMTUNE tool now..."
@@ -195,6 +211,7 @@ setup_desktop_environment() {
 update_system
 setup_virtualization_tools
 setup_looking_glass
+setup_gaming_laptop
 setup_VMTUNE
 
 echo "Setup completed successfully."

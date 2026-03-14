@@ -1,0 +1,6 @@
+Error on line 55 while running: python3 "$LIB_DIR/src/core/configure_vm_xml.py" "$XML_PATH" "$CPU_LIST" "$EMULATOR_LIST" "$CPU_VENDOR" "$IS_LAPTOP" "$PRESET"
+Error on line 55 while running: python3 "$LIB_DIR/src/core/configure_vm_xml.py" "$XML_PATH" "$CPU_LIST" "$EMULATOR_LIST" "$CPU_VENDOR" "$IS_LAPTOP" "$PRESET"
+Error on line 55 while running: python3 "$LIB_DIR/src/core/configure_vm_xml.py" "$XML_PATH" "$CPU_LIST" "$EMULATOR_LIST" "$CPU_VENDOR" "$IS_LAPTOP" "$PRESET"
+Error on line 231 while running: python3 "$LIB_DIR/src/configure_vm_xml.py" "$XML_PATH" "$CPU_LIST" "$EMULATOR_LIST" "$CPU_VENDOR" "$IS_LAPTOP" "$PRESET"
+Error on line 231 while running: python3 "$LIB_DIR/src/core/configure_vm_xml.py" "$XML_PATH" "$CPU_LIST" "$EMULATOR_LIST" "$CPU_VENDOR" "$IS_LAPTOP" "$PRESET"
+Error on line 232 while running: python3 "$LIB_DIR/src/core/configure_vm_xml.py" "$XML_PATH" "$CPU_LIST" "$EMULATOR_LIST" "$CPU_VENDOR" "$IS_LAPTOP" "$PRESET"
