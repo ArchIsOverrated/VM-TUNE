@@ -14,6 +14,7 @@ DISTRO="unknown"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="/usr/local/lib/VMTUNE"
 POLKIT_DIR="/usr/share/polkit-1"
+BATTERY_FILE="/var/lib/libvirt/images/fakebattery.dsl"
 
 INSTALL_DIR="/usr/local/bin/"
 

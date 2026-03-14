@@ -72,9 +72,7 @@ query_dependencies() {
 ########################################
 
 build_looking_glass() {
-
   echo "Starting installation of Looking Glass..."
-
   dnf install -y \
     cmake gcc gcc-c++ \
     libglvnd-devel fontconfig-devel \
@@ -86,48 +84,55 @@ build_looking_glass() {
     libdecor-devel \
     pipewire-devel libsamplerate-devel
 
-  URL="https://looking-glass.io/artifact/stable/source"
-  OUT="looking-glass.tar.gz"
+    URL="https://looking-glass.io/artifact/stable/source"
+    OUT="looking-glass.tar.gz"
 
-  if [[ ! -f "$OUT" ]]; then
-    echo "Downloading Looking Glass..."
-    curl -L "$URL" -o "$OUT"
-  fi
+    # Check if already exists
+    if [[ ! -f "$OUT" ]]; then
+      echo "Downloading Looking Glass..."
+    	curl -L "$URL" -o "$OUT"
+    fi
 
-  if [[ ! -s "$OUT" ]]; then
-    echo "ERROR: Download failed."
-    exit 1
-  fi
+    # Check non-empty
+    if [[ ! -s "$OUT" ]]; then
+        echo "ERROR: Download failed, file is empty."
+        exit 1
+    fi
 
-  if ! file "$OUT" | grep -q "gzip compressed data"; then
-    echo "ERROR: Invalid archive."
-    exit 1
-  fi
+    # Checks to see if gzip compressed archive
+    if ! file "$OUT" | grep -q "gzip compressed data"; then
+        echo "ERROR: File is not a valid gzip archive."
+        exit 1
+    fi
 
-  EXTRACTED_DIR=$(tar -tzf "$OUT" | head -1 | cut -f1 -d"/")
+    # Extract folder name safely
+    EXTRACTED_DIR=$(ls looking-glass* | head -1)
 
-  if [[ ! -d "$EXTRACTED_DIR" ]]; then
-    echo "Extracting..."
-    tar -xzf "$OUT"
-  fi
+    # Extract if folder doesn't exist
+    if [[ ! -d "$EXTRACTED_DIR" ]]; then
+        echo "Extracting Looking Glass..."
+        tar -xzf "$OUT"
+    fi
 
-  if ! compgen -G "looking-glass-*/client/build/looking-glass-client" > /dev/null; then
+    #checks to see if it was already built if not then build
+    if ! compgen -G "looking-glass-*/client/build/looking-glass-client" > /dev/null; then
+      
+      cd looking-glass*/
 
-    cd looking-glass*/
+      mkdir -p ./client/build
 
-    mkdir -p client/build
-    cd client/build
+      cd ./client/build
 
-    cmake ../ \
-      -DENABLE_X11=OFF \
-      -DENABLE_WAYLAND=ON \
-      -DENABLE_PIPEWIRE=ON \
-      -DENABLE_PULSEAUDIO=OFF
+      cmake ../ \
+        -DENABLE_X11=OFF \
+        -DENABLE_WAYLAND=ON \
+        -DENABLE_PIPEWIRE=ON \
+        -DENABLE_PULSEAUDIO=OFF
 
-    make
-
-    cd ../../../
-  fi
+      make
+      
+      cd ../../../
+    fi
 }
 
 ########################################
