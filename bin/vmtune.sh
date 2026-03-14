@@ -66,29 +66,19 @@ parse_args() {
     case "$cmd" in
         configure)
             echo "executing configure_vm.sh"
-            "$LIB_DIR/src/configure_vm.sh" "$LIB_DIR"
+            "$LIB_DIR/src/core/configure_vm.sh" "$LIB_DIR"
             ;;
         create)
             echo "executing createvm.sh"
-            "$LIB_DIR/src/createvm.sh"
+            "$LIB_DIR/src/core/createvm.sh"
             ;;
         looking_glass)
-            BUILD=""
-            INSTALL=""
-            while getopts "bi" opt; do
-                case "$opt" in
-                    b) BUILD="-b" ;;
-                    i) INSTALL="-i" ;;
-                    \?) echo "Invalid option for looking_glass: -$OPTARG"; usage ;;
-                esac
-            done
-            shift $((OPTIND-1))
             echo "Looking Glass options: BUILD=$BUILD INSTALL=$INSTALL DEV_MODE=$DEV_MODE"
-            "$LIB_DIR/src/install_looking-glass.sh" "$BUILD" "$INSTALL"
+            "$LIB_DIR/src/core/install_looking-glass.sh" "--action full-install"
             ;;
         passthrough)
             echo "Running passthrough wizard (DEV_MODE=$DEV_MODE)"
-            "$LIB_DIR/src/gpu_passthrough.sh"
+            "$LIB_DIR/src/core/gpu_passthrough.sh"
             ;;
         *)
             echo "Unknown command: $cmd"

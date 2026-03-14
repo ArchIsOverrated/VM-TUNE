@@ -111,7 +111,6 @@ query_defaults() {
 
 select_iso_path() {
 
-  read -rp "Enter ISO path: " ISO_PATH
 
   REAL_USER="${SUDO_USER:-$USER}"
 
@@ -194,25 +193,6 @@ create_vm() {
 }
 
 ########################################
-# Configure VM
-########################################
-
-configure_vm() {
-
-  if [[ ! -f ./configure_vm.sh ]]; then
-    echo "ERROR: configure_vm.sh not found."
-    exit 1
-  fi
-
-  echo "Running Looking Glass installer..."
-  ./install_looking-glass.sh
-
-  echo "Looking Glass installation completed."
-
-  ./configure_vm.sh "$VM_NAME"
-}
-
-########################################
 # Query Dispatcher
 ########################################
 
@@ -264,7 +244,6 @@ if [[ -n "$ACTION_MODE" ]]; then
 
       select_iso_path
       create_vm
-      configure_vm
 
       echo '{"status":"success"}'
       ;;
@@ -291,10 +270,10 @@ fi
 
 read -rp "Enter VM name: " VM_NAME
 
+read -rp "Enter ISO path: " ISO_PATH
 select_iso_path
 select_disk_size
 select_ram_size
 select_cpu_count
 
 create_vm
-configure_vm
