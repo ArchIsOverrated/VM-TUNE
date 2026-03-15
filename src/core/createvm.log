@@ -1,2 +1,0 @@
-Error on line 183 while running: virt-install --name "$VM_NAME" --ram "$RAM_SIZE" --vcpus "$CPU_COUNT" --disk size="$DISK_SIZE",format=qcow2 --cdrom "$ISO_PATH" --noautoconsole
-Error on line 183 while running: virt-install --name "$VM_NAME" --ram "$RAM_SIZE" --vcpus "$CPU_COUNT" --disk size="$DISK_SIZE",format=qcow2 --cdrom "$ISO_PATH" --noautoconsole

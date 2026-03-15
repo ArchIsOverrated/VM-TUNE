@@ -145,8 +145,8 @@ setup_VMTUNE() {
   mkdir -p "$POLKIT_DIR/rules.d"
 
   echo "copying files over to $POLKIT_DIR"
-  cp -r "$SCRIPT_DIR/polkit/vmtune.policy" "$POLKIT_DIR/actions"
-  cp -r "$SCRIPT_DIR/polkit/50-vmtune.rules" "$POLKIT_DIR/rules.d"
+  cp -r "$SCRIPT_DIR/assets/vmtune.policy" "$POLKIT_DIR/actions"
+  cp -r "$SCRIPT_DIR/assets/50-vmtune.rules" "$POLKIT_DIR/rules.d"
 
   echo "making $LIB_DIR/src folder"
   mkdir -p "$LIB_DIR/src"
