@@ -51,6 +51,10 @@ while [[ $# -gt 0 ]]; do
       PRESET="$2"
       shift 2
       ;;
+    --libdir)
+      LIB_DIR="$2"
+      shift 2
+      ;;
     --laptop)
       IS_LAPTOP=1
       shift
