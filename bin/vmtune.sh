@@ -68,7 +68,7 @@ parse_args() {
             "$LIB_DIR/src/core/configure_vm.sh" "$LIB_DIR"
             ;;
         create)
-            "$LIB_DIR/src/core/createvm.sh"
+            "$LIB_DIR/src/core/create_vm.sh"
             ;;
         looking_glass)
             "$LIB_DIR/src/core/install_looking-glass.sh" "--action full-install"
