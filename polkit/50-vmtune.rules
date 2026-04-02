@@ -1,9 +1,0 @@
-// Allow any user in the 'libvirt' group to connect to system vmtune
-// without entering a password.
-
-polkit.addRule(function(action, subject) {
-    if (action.id == "org.vmtune" &&
-        subject.isInGroup("libvirt")) {
-        return polkit.Result.YES;
-    }
-});

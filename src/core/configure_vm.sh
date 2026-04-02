@@ -56,8 +56,8 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --laptop)
-      IS_LAPTOP=1
-      shift
+      IS_LAPTOP=$2
+      shift 2
       ;;
     *)
       LIB_DIR="$1"

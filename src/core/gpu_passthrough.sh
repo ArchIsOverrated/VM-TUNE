@@ -32,7 +32,7 @@ while [[ $# -gt 0 ]]; do
       VFIO_ENABLED="$2"
       shift 2
       ;;
-    --gpu-ids)
+    --gpuids)
       SELECTED_GPU_IDS="$2"
       shift 2
       ;;
