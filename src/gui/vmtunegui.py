@@ -3,6 +3,8 @@
 import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk
+import sys
+sys.path.append("..")
 import api
 
 class VMTuneWindow(Gtk.ApplicationWindow):
@@ -15,14 +17,18 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         self.configure_page_index = 0
         self.create_page_index = 0
         self.passthrough_page_index = 0
+        lib_dir = "/usr/local/lib/VMTUNE/"
+        configure_vm_location = lib_dir + "src/core/configure_vm.sh"
+        virtual_machine_query = api.configure_vm.query(configure_vm_location,"vms")
+        
+        self.available_virtual_machines = virtual_machine_query["vms"]
 
-        self.available_virtual_machines = ["VM1", "VM2", "VM3"]
-        self.available_os_variants = [
-            "ubuntu24.04",
-            "fedora40",
-            "win11",
-            "generic",
-        ]
+        create_vm_location = lib_dir + "src/core/create_vm.sh"
+        os_variants_query = api.create_vm.query(create_vm_location,"os-variants")
+        self.available_os_variants = os_variants_query["os_variants"]
+
+        cpu_topology_query = api.configure_vm.query(configure_vm_location,"cpu-topology")
+        self.cpu_topology = cpu_topology_query
 
         self.selected_virtual_machine = None
         self.selected_preset = None
@@ -193,7 +199,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         title_label.set_justify(Gtk.Justification.CENTER)
         content_box.append(title_label)
 
-        pinning_grid = self.build_cpu_pinning_grid(self.vm_cpu_pinning_checkbuttons)
+        pinning_grid = self.build_cpu_pinning_grid(self.vm_cpu_pinning_checkbuttons,self.cpu_topology)
         content_box.append(pinning_grid)
 
         page_box.append(content_box)
@@ -212,8 +218,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         title_label = Gtk.Label(label="EMULATOR\nCPU\nPINNING")
         title_label.set_justify(Gtk.Justification.CENTER)
         content_box.append(title_label)
-
-        pinning_grid = self.build_cpu_pinning_grid(self.emulator_cpu_pinning_checkbuttons)
+        pinning_grid = self.build_cpu_pinning_grid(self.emulator_cpu_pinning_checkbuttons,self.cpu_topology)
         content_box.append(pinning_grid)
 
         page_box.append(content_box)
@@ -531,45 +536,93 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
         return row_box
 
-    def build_cpu_pinning_grid(self, checkbutton_dictionary):
+    def build_cpu_pinning_grid(self, checkbutton_dictionary,cpu_topology):
+        #note to self to make this build based off of cpu layout
         grid = Gtk.Grid()
         grid.set_column_spacing(26)
         grid.set_row_spacing(18)
         grid.set_halign(Gtk.Align.CENTER)
         grid.set_valign(Gtk.Align.CENTER)
 
-        thread_0_label = Gtk.Label(label="Thread 0")
-        thread_1_label = Gtk.Label(label="Thread 1")
-        thread_2_label = Gtk.Label(label="Thread 2")
-        thread_3_label = Gtk.Label(label="Thread 3")
+        cpu_vendor = cpu_topology["vendor"]
+        cpu_cores = cpu_topology["cores"]
 
-        core_0_label = Gtk.Label(label="Core 0")
-        core_1_label = Gtk.Label(label="Core 1")
+        for cpu in cpu_cores:
+            print(cpu)
 
-        thread_0_checkbutton = Gtk.CheckButton()
-        thread_1_checkbutton = Gtk.CheckButton()
-        thread_2_checkbutton = Gtk.CheckButton()
-        thread_3_checkbutton = Gtk.CheckButton()
+        #thread_0_label = Gtk.Label(label="Thread 0")
+        #thread_1_label = Gtk.Label(label="Thread 1")
+        #thread_2_label = Gtk.Label(label="Thread 2")
+        #thread_3_label = Gtk.Label(label="Thread 3")
 
-        checkbutton_dictionary["thread_0"] = thread_0_checkbutton
-        checkbutton_dictionary["thread_1"] = thread_1_checkbutton
-        checkbutton_dictionary["thread_2"] = thread_2_checkbutton
-        checkbutton_dictionary["thread_3"] = thread_3_checkbutton
+        #thread_0_checkbutton = Gtk.CheckButton()
+        #thread_1_checkbutton = Gtk.CheckButton()
+        #thread_2_checkbutton = Gtk.CheckButton()
+        #thread_3_checkbutton = Gtk.CheckButton()
+        index=0
+        thread_labels = []
+        thread_checkbuttons = []
+        for cpu in cpu_cores:
+            cpu_split = []
+            if cpu_vendor == "intel":
+                cpu_split = cpu.split("-")
+            elif cpu_vendor == "amd":
+                cpu_split = cpu.split(",")
+                
+            for thread in cpu_split:
+                label_string = "Thread " + str(index)
+                thread_labels.append(Gtk.Label(label = label_string))
+                thread_checkbuttons.append(Gtk.CheckButton())
+                index=index+1
 
-        grid.attach(thread_0_label, 1, 0, 1, 1)
-        grid.attach(thread_1_label, 2, 0, 1, 1)
+        #core_0_label = Gtk.Label(label="Core 0")
+        #core_1_label = Gtk.Label(label="Core 1")
+        core_labels = []
+        for cpu in range(len(cpu_cores)):
+            label_string = "Core " + str(cpu)
+            core_labels.append(Gtk.Label(label = label_string))
 
-        grid.attach(core_0_label, 0, 1, 1, 1)
-        grid.attach(thread_0_checkbutton, 1, 1, 1, 1)
-        grid.attach(thread_1_checkbutton, 2, 1, 1, 1)
+        #checkbutton_dictionary["thread_0"] = thread_0_checkbutton
+        #checkbutton_dictionary["thread_1"] = thread_1_checkbutton
+        #checkbutton_dictionary["thread_2"] = thread_2_checkbutton
+        #checkbutton_dictionary["thread_3"] = thread_3_checkbutton
+        index=0
+        for thread in range(len(thread_labels)):
+            label_string = "thread_" + str(index)
+            checkbutton_dictionary[label_string] = thread_checkbuttons[index]
 
-        grid.attach(thread_2_label, 1, 2, 1, 1)
-        grid.attach(thread_3_label, 2, 2, 1, 1)
+        #grid.attach(thread_0_label, 1, 0, 1, 1)
+        #grid.attach(thread_1_label, 2, 0, 1, 1)
 
-        grid.attach(core_1_label, 0, 3, 1, 1)
-        grid.attach(thread_2_checkbutton, 1, 3, 1, 1)
-        grid.attach(thread_3_checkbutton, 2, 3, 1, 1)
+        #grid.attach(core_0_label, 0, 1, 1, 1)
+        #grid.attach(thread_0_checkbutton, 1, 1, 1, 1)
+        #grid.attach(thread_1_checkbutton, 2, 1, 1, 1)
 
+        #grid.attach(thread_2_label, 1, 2, 1, 1)
+        #grid.attach(thread_3_label, 2, 2, 1, 1)
+
+        #grid.attach(core_1_label, 0, 3, 1, 1)
+        #grid.attach(thread_2_checkbutton, 1, 3, 1, 1)
+        #grid.attach(thread_3_checkbutton, 2, 3, 1, 1)
+        cpu_index = 0
+        thread_index = 0
+        for cpu in cpu_cores:
+            grid.attach(core_labels[cpu_index],0,(1+(cpu_index*2)),1,1)
+            cpu_split = []
+            if cpu_vendor == "intel":
+                cpu_split = cpu.split("-")
+            elif cpu_vendor == "amd":
+                cpu_split = cpu.split(",")
+
+            for thread in cpu_split:
+                print(thread)
+                print("cpu_index",cpu_index)
+                print("(1+(cpu_index*2))",(1+(cpu_index*2)))
+                grid.attach(thread_labels[thread_index],(1+(thread_index % 2)),(0+(cpu_index*2)),1,1)
+                grid.attach(thread_checkbuttons[thread_index],(1+(thread_index % 2)),(1+(cpu_index*2)),1,1)
+                thread_index = thread_index + 1
+            cpu_index = cpu_index + 1
+                    
         return grid
 
     def build_navigation_row(self, section_name, show_previous, show_next):

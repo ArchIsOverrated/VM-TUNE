@@ -1,4 +1,4 @@
-import api_utility
+from . import api_utility
 
 def query(script_location,query_object):
   """
