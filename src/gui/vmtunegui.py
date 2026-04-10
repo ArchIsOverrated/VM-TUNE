@@ -3,14 +3,14 @@
 import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk
-
+import api
 
 class VMTuneWindow(Gtk.ApplicationWindow):
     def __init__(self, application):
         super().__init__(application=application)
 
         self.set_title("VM-TUNE")
-        self.set_default_size(1000, 600)
+        self.set_default_size(888, 500)
 
         self.configure_page_index = 0
         self.create_page_index = 0
@@ -80,7 +80,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
     def build_left_sidebar(self):
         sidebar_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-        sidebar_box.set_size_request(210, -1)
+        sidebar_box.set_size_request(-1, -1)
 
         configure_button = self.build_sidebar_button("Configure", self.on_sidebar_configure_clicked)
         create_button = self.build_sidebar_button("Create", self.on_sidebar_create_clicked)
@@ -94,7 +94,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
     def build_sidebar_button(self, label_text, clicked_handler):
         button = Gtk.Button(label=label_text)
-        button.set_size_request(-1, 110)
+        button.set_size_request(-1, -1)
         button.set_hexpand(True)
         button.connect("clicked", clicked_handler)
         return button
@@ -748,6 +748,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
     def on_next_clicked(self, button, section_name):
         if section_name == "configure":
+            print("configure")
             if self.configure_page_index < len(self.configure_page_names) - 1:
                 self.configure_page_index += 1
                 self.update_configure_visible_page()
@@ -755,6 +756,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
                 self.print_configure_results()
 
         elif section_name == "create":
+            print("create")
             if self.create_page_index < len(self.create_page_names) - 1:
                 self.create_page_index += 1
                 self.update_create_visible_page()
@@ -762,6 +764,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
                 self.print_create_results()
 
         elif section_name == "passthrough":
+            print("passthrough")
             if self.passthrough_page_index < len(self.passthrough_page_names) - 1:
                 self.passthrough_page_index += 1
                 self.update_passthrough_visible_page()
