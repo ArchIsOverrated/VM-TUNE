@@ -6,6 +6,10 @@ from gi.repository import Gtk
 import sys
 sys.path.append("..")
 import api
+import subprocess
+
+lib_dir = "/usr/local/lib/VMTUNE/"
+configure_vm_location = lib_dir + "src/core/configure_vm.sh"
 
 class VMTuneWindow(Gtk.ApplicationWindow):
     def __init__(self, application):
@@ -17,8 +21,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         self.configure_page_index = 0
         self.create_page_index = 0
         self.passthrough_page_index = 0
-        lib_dir = "/usr/local/lib/VMTUNE/"
-        configure_vm_location = lib_dir + "src/core/configure_vm.sh"
+
         virtual_machine_query = api.configure_vm.query(configure_vm_location,"vms")
         
         self.available_virtual_machines = virtual_machine_query["vms"]
@@ -58,17 +61,18 @@ class VMTuneWindow(Gtk.ApplicationWindow):
             "emulator_cpu_pinning",
             "preset",
             "asus",
+            "confirm"
         ]
 
         self.create_page_names = [
             "create_vm_name",
             "create_iso",
-            "create_resources",
+            "create_resources"
         ]
 
         self.passthrough_page_names = [
             "select_gpu",
-            "enable_vfio",
+            "enable_vfio"
         ]
 
         self.set_child(self.build_main_layout())
@@ -136,12 +140,14 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         emulator_cpu_pinning_page = self.build_emulator_cpu_pinning_page()
         preset_page = self.build_preset_page()
         asus_page = self.build_asus_laptop_page()
+        confirm_page = self.build_confirm_page()
 
         self.configure_section_stack.add_named(choose_vm_page, "choose_vm")
         self.configure_section_stack.add_named(vm_cpu_pinning_page, "vm_cpu_pinning")
         self.configure_section_stack.add_named(emulator_cpu_pinning_page, "emulator_cpu_pinning")
         self.configure_section_stack.add_named(preset_page, "preset")
         self.configure_section_stack.add_named(asus_page, "asus")
+        self.configure_section_stack.add_named(confirm_page,"confirm")
 
         self.update_configure_visible_page()
 
@@ -242,11 +248,11 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         radio_box.set_halign(Gtk.Align.CENTER)
 
         default_radio_button = Gtk.CheckButton()
-        default_radio_button.connect("toggled", self.on_preset_selected, "Default")
+        default_radio_button.connect("toggled", self.on_preset_selected, "1")
 
         gaming_radio_button = Gtk.CheckButton()
         gaming_radio_button.set_group(default_radio_button)
-        gaming_radio_button.connect("toggled", self.on_preset_selected, "Gaming")
+        gaming_radio_button.connect("toggled", self.on_preset_selected, "2")
 
         radio_box.append(self.build_radio_row(default_radio_button, "Default"))
         radio_box.append(self.build_radio_row(gaming_radio_button, "Gaming"))
@@ -273,11 +279,11 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         radio_box.set_halign(Gtk.Align.CENTER)
 
         yes_radio_button = Gtk.CheckButton()
-        yes_radio_button.connect("toggled", self.on_asus_laptop_answer_selected, "Yes")
+        yes_radio_button.connect("toggled", self.on_asus_laptop_answer_selected, 1)
 
         no_radio_button = Gtk.CheckButton()
         no_radio_button.set_group(yes_radio_button)
-        no_radio_button.connect("toggled", self.on_asus_laptop_answer_selected, "No")
+        no_radio_button.connect("toggled", self.on_asus_laptop_answer_selected, 2)
 
         radio_box.append(self.build_radio_row(yes_radio_button, "Yes"))
         radio_box.append(self.build_radio_row(no_radio_button, "No"))
@@ -285,6 +291,50 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         content_box.append(radio_box)
         page_box.append(content_box)
         page_box.append(self.build_navigation_row("configure", show_previous=True, show_next=True))
+
+        return page_box
+
+    def build_confirm_page(self):
+        page_box = self.build_page_box()
+
+        vm_cpu_pinning_values = self.get_checkbutton_values(self.vm_cpu_pinning_checkbuttons)
+        emulator_cpu_pinning_values = self.get_checkbutton_values(self.emulator_cpu_pinning_checkbuttons)
+
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=24)
+        content_box.set_valign(Gtk.Align.CENTER)
+        content_box.set_halign(Gtk.Align.CENTER)
+        content_box.set_vexpand(True)
+
+        title_label = Gtk.Label(label="Confirm results")
+        title_label.set_justify(Gtk.Justification.CENTER)
+        content_box.append(title_label)
+
+        selected_vm_string="Selected VM: "+str(self.selected_virtual_machine)
+        selected_vm_label = Gtk.Label(label=selected_vm_string)
+        content_box.append(selected_vm_label)
+
+        cpu_pinning_string="VM CPU pinning: "+str(vm_cpu_pinning_values)
+        cpu_pinning_label = Gtk.Label(label=cpu_pinning_string)
+        content_box.append(cpu_pinning_label)
+
+        emulator_pinning_string="Emulator CPU pinning: "+str(emulator_cpu_pinning_values)
+        emulator_pinning_label = Gtk.Label(label=emulator_pinning_string)
+        content_box.append(emulator_pinning_label)
+
+        selected_preset_string="VM Preset: "+str(self.selected_preset)
+        preset_label = Gtk.Label(label=selected_preset_string)
+        content_box.append(preset_label)
+
+        asus_laptop_string="Asus gaming laptop: "+str(self.selected_asus_laptop_answer)
+        selected_vm_label = Gtk.Label(label=asus_laptop_string)
+        content_box.append(selected_vm_label)
+
+        apply_button = Gtk.Button(label="Apply")
+        apply_button.connect("clicked", self.apply_configure_changes)
+        content_box.append(apply_button)
+
+        page_box.append(content_box)
+        page_box.append(self.build_navigation_row("configure",show_previous=True, show_next=False))
 
         return page_box
 
@@ -536,7 +586,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
         return row_box
 
-    def build_cpu_pinning_grid(self, checkbutton_dictionary,cpu_topology):
+    def build_cpu_pinning_grid(self, checkbutton_dictionary, cpu_topology):
         #note to self to make this build based off of cpu layout
         grid = Gtk.Grid()
         grid.set_column_spacing(26)
@@ -547,18 +597,6 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         cpu_vendor = cpu_topology["vendor"]
         cpu_cores = cpu_topology["cores"]
 
-        for cpu in cpu_cores:
-            print(cpu)
-
-        #thread_0_label = Gtk.Label(label="Thread 0")
-        #thread_1_label = Gtk.Label(label="Thread 1")
-        #thread_2_label = Gtk.Label(label="Thread 2")
-        #thread_3_label = Gtk.Label(label="Thread 3")
-
-        #thread_0_checkbutton = Gtk.CheckButton()
-        #thread_1_checkbutton = Gtk.CheckButton()
-        #thread_2_checkbutton = Gtk.CheckButton()
-        #thread_3_checkbutton = Gtk.CheckButton()
         index=0
         thread_labels = []
         thread_checkbuttons = []
@@ -575,35 +613,18 @@ class VMTuneWindow(Gtk.ApplicationWindow):
                 thread_checkbuttons.append(Gtk.CheckButton())
                 index=index+1
 
-        #core_0_label = Gtk.Label(label="Core 0")
-        #core_1_label = Gtk.Label(label="Core 1")
         core_labels = []
         for cpu in range(len(cpu_cores)):
             label_string = "Core " + str(cpu)
             core_labels.append(Gtk.Label(label = label_string))
 
-        #checkbutton_dictionary["thread_0"] = thread_0_checkbutton
-        #checkbutton_dictionary["thread_1"] = thread_1_checkbutton
-        #checkbutton_dictionary["thread_2"] = thread_2_checkbutton
-        #checkbutton_dictionary["thread_3"] = thread_3_checkbutton
         index=0
+        print(len(thread_labels))
         for thread in range(len(thread_labels)):
             label_string = "thread_" + str(index)
             checkbutton_dictionary[label_string] = thread_checkbuttons[index]
-
-        #grid.attach(thread_0_label, 1, 0, 1, 1)
-        #grid.attach(thread_1_label, 2, 0, 1, 1)
-
-        #grid.attach(core_0_label, 0, 1, 1, 1)
-        #grid.attach(thread_0_checkbutton, 1, 1, 1, 1)
-        #grid.attach(thread_1_checkbutton, 2, 1, 1, 1)
-
-        #grid.attach(thread_2_label, 1, 2, 1, 1)
-        #grid.attach(thread_3_label, 2, 2, 1, 1)
-
-        #grid.attach(core_1_label, 0, 3, 1, 1)
-        #grid.attach(thread_2_checkbutton, 1, 3, 1, 1)
-        #grid.attach(thread_3_checkbutton, 2, 3, 1, 1)
+            index=index+1
+        
         cpu_index = 0
         thread_index = 0
         for cpu in cpu_cores:
@@ -615,16 +636,13 @@ class VMTuneWindow(Gtk.ApplicationWindow):
                 cpu_split = cpu.split(",")
 
             for thread in cpu_split:
-                print(thread)
-                print("cpu_index",cpu_index)
-                print("(1+(cpu_index*2))",(1+(cpu_index*2)))
                 grid.attach(thread_labels[thread_index],(1+(thread_index % 2)),(0+(cpu_index*2)),1,1)
                 grid.attach(thread_checkbuttons[thread_index],(1+(thread_index % 2)),(1+(cpu_index*2)),1,1)
                 thread_index = thread_index + 1
             cpu_index = cpu_index + 1
                     
         return grid
-
+    
     def build_navigation_row(self, section_name, show_previous, show_next):
         navigation_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
         navigation_box.set_hexpand(True)
@@ -676,6 +694,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
     def on_preset_selected(self, check_button, preset_name):
         if check_button.get_active():
+            print("check_button.get_active()",check_button.get_active())
             self.selected_preset = preset_name
             print("Selected preset:", self.selected_preset)
 
@@ -701,6 +720,30 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         print("Preset:", self.selected_preset)
         print("Asus gaming laptop:", self.selected_asus_laptop_answer)
         print()
+
+    def apply_configure_changes(self,apply_button):
+        print("this is configured")
+        vm_cpu_pinning_values = self.get_checkbutton_values(self.vm_cpu_pinning_checkbuttons)
+        emulator_cpu_pinning_values = self.get_checkbutton_values(self.emulator_cpu_pinning_checkbuttons)
+        print()
+        print("Configure wizard results")
+        print("------------------------")
+        print("Selected VM:", self.selected_virtual_machine)
+        print("VM CPU pinning:", vm_cpu_pinning_values)
+        print("Emulator CPU pinning:", emulator_cpu_pinning_values)
+        print("Preset:", self.selected_preset)
+        print("Asus gaming laptop:", self.selected_asus_laptop_answer)
+        print()
+        
+        api.configure_vm.action(configure_vm_location,
+        "configure",
+        vm=self.selected_virtual_machine,
+        cpu=vm_cpu_pinning_values,
+        emulator=emulator_cpu_pinning_values,
+        preset=self.selected_preset,
+        laptop=self.on_asus_laptop_answer_selected,
+        libdir=lib_dir)
+
 
     # -------------------------------------------------
     # Create actions
@@ -805,32 +848,36 @@ class VMTuneWindow(Gtk.ApplicationWindow):
             if self.configure_page_index < len(self.configure_page_names) - 1:
                 self.configure_page_index += 1
                 self.update_configure_visible_page()
-            else:
-                self.print_configure_results()
 
         elif section_name == "create":
             print("create")
             if self.create_page_index < len(self.create_page_names) - 1:
                 self.create_page_index += 1
                 self.update_create_visible_page()
-            else:
-                self.print_create_results()
 
         elif section_name == "passthrough":
             print("passthrough")
             if self.passthrough_page_index < len(self.passthrough_page_names) - 1:
                 self.passthrough_page_index += 1
                 self.update_passthrough_visible_page()
-            else:
-                self.print_passthrough_results()
 
     def get_checkbutton_values(self, checkbutton_dictionary):
         values = {}
-
+        comma_separated_list = ""
+        index = 0
         for thread_name, checkbutton in checkbutton_dictionary.items():
-            values[thread_name] = checkbutton.get_active()
+            print(checkbutton.get_active())
+            if checkbutton.get_active() == True:
+                comma_separated_list=comma_separated_list+str(index)+","
 
-        return values
+            value = checkbutton.get_active()
+            values[thread_name] = checkbutton.get_active()
+            index=index+1
+
+        print("comma separted list",comma_separated_list)
+        comma_separated_list=comma_separated_list[:-1]
+
+        return comma_separated_list
 
 
 class VMTuneApplication(Gtk.Application):

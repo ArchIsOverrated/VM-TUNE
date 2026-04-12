@@ -103,7 +103,7 @@ def action(script_location,action, **action_args):
               cpu="0,1,2,3,4,5,6,7,8,9,10,11",
               emulator="12,13",
               preset=2,
-              laptop="1",
+              laptop=1,
               libdir="/usr/local/lib/VMTUNE/"
           )
 
