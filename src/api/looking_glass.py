@@ -38,8 +38,8 @@ def query(lib_dir,query_object):
 
   Example
   -------
-  >>> script = "/path/to/install_looking-glass.sh"
-  >>> looking_glass = query(script, "status")
+  >>> lib_dir = "/path/to/libdir"
+  >>> looking_glass = query(lib_dir, "status")
   >>> print(looking_glass)
 
 
@@ -58,7 +58,7 @@ def action(action, **action_args):
   ----------
   lib_dir : str
       Absolute path to the shell script to execute.
-      Example: "/usr/local/lib/VMTUNE/src/core/configure_vm.sh"
+      Example: "/usr/local/lib/VMTUNE/"
 
   action : str
       The action to execute.

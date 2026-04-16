@@ -1,6 +1,6 @@
 from . import api_utility
 
-def query(lib_dir,query_object):
+def query(script_location,query_object):
   """
   Execute a query against a VM-TUNE shell script and return the result as a Python object.
 
@@ -10,9 +10,9 @@ def query(lib_dir,query_object):
 
   Parameters
   ----------
-  lib_dir : str
+  script_location : str
       Absolute path to the shell script to execute.
-      Example: "/usr/local/lib/VMTUNE/src/core/gpu_passthrough.sh"
+      Example: "/usr/local/bin/vmtune"
 
   query_object : str
       The query to pass to the script via the `--query` flag.
@@ -38,13 +38,13 @@ def query(lib_dir,query_object):
 
   Example
   -------
-  >>> script = "/path/to/gpu_passthrough.sh"
-  >>> gpus = query(script, "gpus")
+  >>> script_location = "/path/to/libdir"
+  >>> gpus = query(script_location, "gpus")
   >>> print(gpus)
 
 
   """
-  json_object = api_utility.query(lib_dir,"passthrough",query_object)
+  json_object = api_utility.query(script_location,"passthrough",query_object)
   return json_object
 
 def action(action, **action_args):
@@ -58,7 +58,7 @@ def action(action, **action_args):
   ----------
   script_location : str
       Absolute path to the shell script to execute.
-      Example: "/usr/local/lib/VMTUNE/src/core/configure_vm.sh"
+      Example: "/usr/local/bin/vmtune"
 
   action : str
       The action to execute (e.g. "set")
@@ -96,7 +96,7 @@ def action(action, **action_args):
   - No stdout/stderr or JSON parsing is performed.
   - Stateless: simply runs a command and returns status.
   """
-  result = api_utility.action(lib_dir,"passthrough",action,**action_args)
+  result = api_utility.action(script_location,"passthrough",action,**action_args)
   return result
 
 

@@ -2,14 +2,14 @@
 
 import gi
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk
+from gi.repository import Gtk, Gio, GLib
 import sys
 sys.path.append("..")
 import api
 import subprocess
 
 lib_dir = "/usr/local/lib/VMTUNE/"
-configure_vm_location = lib_dir + "src/core/configure_vm.sh"
+script_location = "/usr/local/bin/vmtune"
 
 class VMTuneWindow(Gtk.ApplicationWindow):
     def __init__(self, application):
@@ -21,18 +21,17 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         self.configure_page_index = 0
         self.create_page_index = 0
         self.passthrough_page_index = 0
-
-        virtual_machine_query = api.configure_vm.query(configure_vm_location,"vms")
-        
+        print(1)
+        virtual_machine_query = api.configure_vm.query(script_location,"vms")
+        print(2)
         self.available_virtual_machines = virtual_machine_query["vms"]
-
-        create_vm_location = lib_dir + "src/core/create_vm.sh"
-        os_variants_query = api.create_vm.query(create_vm_location,"os-variants")
+        print(3)
+        os_variants_query = api.create_vm.query(script_location,"os-variants")
         self.available_os_variants = os_variants_query["os_variants"]
-
-        cpu_topology_query = api.configure_vm.query(configure_vm_location,"cpu-topology")
+        print(4)
+        cpu_topology_query = api.configure_vm.query(script_location,"cpu-topology")
         self.cpu_topology = cpu_topology_query
-
+        print(5)
         self.selected_virtual_machine = None
         self.selected_preset = None
         self.selected_asus_laptop_answer = None
@@ -74,7 +73,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
             "select_gpu",
             "enable_vfio"
         ]
-
+        print(6)
         self.set_child(self.build_main_layout())
 
     def build_main_layout(self):
@@ -140,7 +139,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         emulator_cpu_pinning_page = self.build_emulator_cpu_pinning_page()
         preset_page = self.build_preset_page()
         asus_page = self.build_asus_laptop_page()
-        confirm_page = self.build_confirm_page()
+        confirm_page = self.build_configure_confirm_page()
 
         self.configure_section_stack.add_named(choose_vm_page, "choose_vm")
         self.configure_section_stack.add_named(vm_cpu_pinning_page, "vm_cpu_pinning")
@@ -294,7 +293,10 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
         return page_box
 
-    def build_confirm_page(self):
+    def build_configure_confirm_page(self):
+
+        print("----------------------------------------------------")
+        print("building the confirm page")
         page_box = self.build_page_box()
 
         vm_cpu_pinning_values = self.get_checkbutton_values(self.vm_cpu_pinning_checkbuttons)
@@ -309,22 +311,27 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         title_label.set_justify(Gtk.Justification.CENTER)
         content_box.append(title_label)
 
+        print("Selected VM:",self.selected_virtual_machine)
         selected_vm_string="Selected VM: "+str(self.selected_virtual_machine)
         selected_vm_label = Gtk.Label(label=selected_vm_string)
         content_box.append(selected_vm_label)
 
+        print("VM CPU pinning:",vm_cpu_pinning_values)
         cpu_pinning_string="VM CPU pinning: "+str(vm_cpu_pinning_values)
         cpu_pinning_label = Gtk.Label(label=cpu_pinning_string)
         content_box.append(cpu_pinning_label)
 
+        print("Emulator CPU pinning:",emulator_cpu_pinning_values)
         emulator_pinning_string="Emulator CPU pinning: "+str(emulator_cpu_pinning_values)
         emulator_pinning_label = Gtk.Label(label=emulator_pinning_string)
         content_box.append(emulator_pinning_label)
 
+        print("VM Preset:",self.selected_preset)
         selected_preset_string="VM Preset: "+str(self.selected_preset)
         preset_label = Gtk.Label(label=selected_preset_string)
         content_box.append(preset_label)
 
+        print("Asus gaming laptop:",self.selected_asus_laptop_answer)
         asus_laptop_string="Asus gaming laptop: "+str(self.selected_asus_laptop_answer)
         selected_vm_label = Gtk.Label(label=asus_laptop_string)
         content_box.append(selected_vm_label)
@@ -477,6 +484,60 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
         page_box.append(content_box)
         page_box.append(self.build_navigation_row("create", show_previous=True, show_next=True))
+
+        return page_box
+
+    def build_create_confirm_page(self):
+        page_box = self.build_page_box()
+
+        vm_cpu_pinning_values = self.get_checkbutton_values(self.vm_cpu_pinning_checkbuttons)
+        emulator_cpu_pinning_values = self.get_checkbutton_values(self.emulator_cpu_pinning_checkbuttons)
+
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=24)
+        content_box.set_valign(Gtk.Align.CENTER)
+        content_box.set_halign(Gtk.Align.CENTER)
+        content_box.set_vexpand(True)
+
+        title_label = Gtk.Label(label="Confirm results")
+        title_label.set_justify(Gtk.Justification.CENTER)
+        content_box.append(title_label)
+
+        vm_name_string="VM name: "+str(self.create_vm_name_entry)
+        vm_name_label = Gtk.Label(label=vm_name_string)
+        content_box.append(vm_name_label)
+
+        iso_path_string="ISO Path: "+str(self.create_iso_path_entry.get_text())      
+        iso_path_label = Gtk.Label(label=iso_path_string)
+        content_box.append(iso_path_label)
+
+        selected_index = self.create_os_variant_dropdown.get_selected()
+        selected_os_variant = None
+
+        if selected_index != Gtk.INVALID_LIST_POSITION:
+            selected_os_variant = self.available_os_variants[selected_index]
+
+        os_variant_string ="OS variant: "+selected_os_variant
+        os_variant_label = Gtk.Label(label=os_variant_string)
+        content_box.append(os_variant_label)
+
+        os_memory_string = "Memory MiB: "+ self.create_memory_entry.get_text()
+        os_memory_label = Gtk.Label(label=os_memory_string)
+        content_box.append(os_memory_label)
+
+        cpu_string = "CPUs: " + self.create_cpu_entry.get_text()
+        cpu_label = Gtk.Label(label=cpu_string)
+        content_box.append(cpu_label)
+
+        storage_string = "Storage GiB: " + self.create_storage_entry.get_text()
+        storage_label = Gtk.Label(label=storage_string)
+        content_box.append(storage_label)
+
+        apply_button = Gtk.Button(label="Apply")
+        apply_button.connect("clicked", self.apply_create_vm_changes)
+        content_box.append(apply_button)
+
+        page_box.append(content_box)
+        page_box.append(self.build_navigation_row("configure",show_previous=True, show_next=False))
 
         return page_box
 
@@ -728,20 +789,20 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         print()
         print("Configure wizard results")
         print("------------------------")
-        print("Selected VM:", self.selected_virtual_machine)
-        print("VM CPU pinning:", vm_cpu_pinning_values)
-        print("Emulator CPU pinning:", emulator_cpu_pinning_values)
-        print("Preset:", self.selected_preset)
-        print("Asus gaming laptop:", self.selected_asus_laptop_answer)
+        print("Selected VM:", self.selected_virtual_machine,type(self.selected_virtual_machine))
+        print("VM CPU pinning:", vm_cpu_pinning_values,type(vm_cpu_pinning_values))
+        print("Emulator CPU pinning:", emulator_cpu_pinning_values,type(emulator_cpu_pinning_values))
+        print("Preset:", self.selected_preset,type(self.selected_preset))
+        print("Asus gaming laptop:", self.selected_asus_laptop_answer,type(self.selected_asus_laptop_answer))
         print()
         
-        api.configure_vm.action(configure_vm_location,
+        api.configure_vm.action(script_location,
         "configure",
         vm=self.selected_virtual_machine,
         cpu=vm_cpu_pinning_values,
         emulator=emulator_cpu_pinning_values,
         preset=self.selected_preset,
-        laptop=self.on_asus_laptop_answer_selected,
+        laptop=self.selected_asus_laptop_answer,
         libdir=lib_dir)
 
 
@@ -753,6 +814,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         page_name = self.create_page_names[self.create_page_index]
         self.create_section_stack.set_visible_child_name(page_name)
 
+    '''
     def on_browse_iso_clicked(self, button):
         file_chooser = Gtk.FileChooserNative(
             title="Choose ISO",
@@ -769,14 +831,37 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
         file_chooser.connect("response", self.on_iso_file_dialog_response)
         file_chooser.show()
+    '''
+    
+    def on_browse_iso_clicked(self, sender):
+        iso_file_filter = Gtk.FileFilter()
+        iso_file_filter.set_name("ISO files")
+        iso_file_filter.add_pattern("*.iso")
 
-    def on_iso_file_dialog_response(self, file_chooser, response):
-        if response == Gtk.ResponseType.ACCEPT:
-            selected_file = file_chooser.get_file()
-            if selected_file is not None:
-                selected_path = selected_file.get_path()
-                if selected_path is not None:
-                    self.create_iso_path_entry.set_text(selected_path)
+        file_filter_list = Gio.ListStore.new(Gtk.FileFilter)
+        file_filter_list.append(iso_file_filter)
+
+        iso_file_dialog = Gtk.FileDialog(
+            title="Choose ISO",
+            filters=file_filter_list,
+        )
+        iso_file_dialog.open(self, None, self.on_iso_file_dialog_response)
+
+    def on_iso_file_dialog_response(self, iso_file_dialog, async_result):
+        try:
+            selected_file = iso_file_dialog.open_finish(async_result)
+        except GLib.Error:
+            return
+
+        if selected_file is None:
+            return
+
+        selected_path = selected_file.get_path()
+
+        if selected_path is None:
+            return
+
+        self.create_iso_path_entry.set_text(selected_path)
 
     def print_create_results(self):
         selected_index = self.create_os_variant_dropdown.get_selected()
@@ -795,6 +880,34 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         print("CPUs:", self.create_cpu_entry.get_text())
         print("Storage GiB:", self.create_storage_entry.get_text())
         print()
+
+    def apply_create_vm_changes(self,apply_button):
+        selected_index = self.create_os_variant_dropdown.get_selected()
+        selected_os_variant = None
+
+        if selected_index != Gtk.INVALID_LIST_POSITION:
+            selected_os_variant = self.available_os_variants[selected_index]
+
+        print()
+        print("Create VM wizard results")
+        print("------------------------")
+        print("VM name:", self.create_vm_name_entry.get_text())
+        print("ISO path:", self.create_iso_path_entry.get_text())
+        print("OS variant:", selected_os_variant)
+        print("Memory MiB:", self.create_memory_entry.get_text())
+        print("CPUs:", self.create_cpu_entry.get_text())
+        print("Storage GiB:", self.create_storage_entry.get_text())
+        print()
+        
+        api.create_vm.action(script_location,
+        "create",
+        vm=self.create_vm_name_entry.get_text(),
+        iso=self.create_iso_path_entry.get_text(),
+        disk=self.create_storage_entry.get_text(),
+        ram=self.create_memory_entry.get_text(),
+        cpu=self.create_cpu_entry.get_text(),
+        osvariant=selected_os_variant,
+        libdir=lib_dir)
 
     # -------------------------------------------------
     # Passthrough actions

@@ -1,6 +1,6 @@
 from . import api_utility
 
-def query(lib_dir,query_object):
+def query(script_location,query_object):
   """
   Execute a query against a VM-TUNE shell script and return the result as a Python object.
 
@@ -10,9 +10,9 @@ def query(lib_dir,query_object):
 
   Parameters
   ----------
-  lib_dir : str
+  script_location : str
       Absolute path to the shell script to execute.
-      Example: "/home/owner/Projects/VM-TUNE/"
+      Example: "/usr/local/bin/vmtune"
 
   query_object : str
       The query to pass to the script via the `--query` flag.
@@ -38,16 +38,16 @@ def query(lib_dir,query_object):
 
   Example
   -------
-  >>> script = "/path/to/create_vm.sh"
-  >>> isos = query(script, "isos")
+  >>> script_location = "/path/to/libdir"
+  >>> isos = query(script_location, "isos")
   >>> print(isos)
 
 
   """
-  json_object = api_utility.query(lib_dir,"create",query_object)
+  json_object = api_utility.query(script_location,"create",query_object)
   return json_object
 
-def action(lib_dir,action, **action_args):
+def action(script_location,action, **action_args):
   """
   Execute a VM-TUNE create VM CLI action.
 
@@ -56,9 +56,9 @@ def action(lib_dir,action, **action_args):
 
   Parameters
   ----------
-  lib_dir : str
+  script_location : str
   Absolute path to the shell script to execute.
-  Example: "/usr/local/lib/VMTUNE/"
+  Example: "/usr/local/bin/vmtune"
 
   action : str
       The action to execute (e.g. "create")
@@ -116,5 +116,5 @@ def action(lib_dir,action, **action_args):
   - No stdout/stderr or JSON parsing is performed.
   - Stateless: simply runs a command and returns status.
   """
-  result = api_utility.action(lib_dir,"create",action,**action_args)
+  result = api_utility.action(script_location,"create",action,**action_args)
   return result
