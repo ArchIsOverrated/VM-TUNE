@@ -21,17 +21,36 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         self.configure_page_index = 0
         self.create_page_index = 0
         self.passthrough_page_index = 0
-        print(1)
+
         virtual_machine_query = api.configure_vm.query(script_location,"vms")
-        print(2)
         self.available_virtual_machines = virtual_machine_query["vms"]
-        print(3)
+
         os_variants_query = api.create_vm.query(script_location,"os-variants")
         self.available_os_variants = os_variants_query["os_variants"]
-        print(4)
+
         cpu_topology_query = api.configure_vm.query(script_location,"cpu-topology")
         self.cpu_topology = cpu_topology_query
-        print(5)
+
+        gpu_query = api.gpu_passthrough.query(script_location,"gpus")
+        self.available_gpus = gpu_query["gpus"]
+        print(type(gpu_query))
+        print("gpu query")
+        print(gpu_query)
+        print()
+        print("gpus")
+        print(gpu_query['gpus'])
+        print(type(gpu_query['gpus']))
+        print()
+        print(gpu_query.keys())
+
+        print(gpu_query['gpus'][0])
+        print(type(gpu_query['gpus'][0]))
+        print(gpu_query['gpus'][1])
+        print(type(gpu_query['gpus'][1]))
+
+        print(gpu_query['gpus'][1].keys())
+        print(gpu_query['gpus'][1]['ids'])
+
         self.selected_virtual_machine = None
         self.selected_preset = None
         self.selected_asus_laptop_answer = None
@@ -55,25 +74,26 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         self.main_section_stack = None
 
         self.configure_page_names = [
-            "choose_vm",
-            "vm_cpu_pinning",
-            "emulator_cpu_pinning",
-            "preset",
-            "asus",
-            "confirm"
+            "configure_choose_vm",
+            "configure_vm_cpu_pinning",
+            "configure_emulator_cpu_pinning",
+            "configure_preset",
+            "configure_asus",
+            "configure_confirm"
         ]
 
         self.create_page_names = [
             "create_vm_name",
             "create_iso",
-            "create_resources"
+            "create_resources",
+            "create_confirm"
         ]
 
         self.passthrough_page_names = [
-            "select_gpu",
-            "enable_vfio"
+            "passthrough_select_gpu",
+            "passthrough_enable_vfio",
+            "passthrough_confirm"
         ]
-        print(6)
         self.set_child(self.build_main_layout())
 
     def build_main_layout(self):
@@ -141,12 +161,12 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         asus_page = self.build_asus_laptop_page()
         confirm_page = self.build_configure_confirm_page()
 
-        self.configure_section_stack.add_named(choose_vm_page, "choose_vm")
-        self.configure_section_stack.add_named(vm_cpu_pinning_page, "vm_cpu_pinning")
-        self.configure_section_stack.add_named(emulator_cpu_pinning_page, "emulator_cpu_pinning")
-        self.configure_section_stack.add_named(preset_page, "preset")
-        self.configure_section_stack.add_named(asus_page, "asus")
-        self.configure_section_stack.add_named(confirm_page,"confirm")
+        self.configure_section_stack.add_named(choose_vm_page, "configure_choose_vm")
+        self.configure_section_stack.add_named(vm_cpu_pinning_page, "configure_vm_cpu_pinning")
+        self.configure_section_stack.add_named(emulator_cpu_pinning_page, "configure_emulator_cpu_pinning")
+        self.configure_section_stack.add_named(preset_page, "configure_preset")
+        self.configure_section_stack.add_named(asus_page, "configure_asus")
+        self.configure_section_stack.add_named(confirm_page,"configure_confirm")
 
         self.update_configure_visible_page()
 
@@ -357,10 +377,12 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         create_vm_name_page = self.build_create_vm_name_page()
         create_iso_page = self.build_create_iso_page()
         create_resources_page = self.build_create_resources_page()
+        create_confirm_page = self.build_create_confirm_page()
 
         self.create_section_stack.add_named(create_vm_name_page, "create_vm_name")
         self.create_section_stack.add_named(create_iso_page, "create_iso")
         self.create_section_stack.add_named(create_resources_page, "create_resources")
+        self.create_section_stack.add_named(create_confirm_page,"create_confirm")
 
         self.update_create_visible_page()
 
@@ -502,7 +524,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         title_label.set_justify(Gtk.Justification.CENTER)
         content_box.append(title_label)
 
-        vm_name_string="VM name: "+str(self.create_vm_name_entry)
+        vm_name_string="VM name: "+str(self.create_vm_name_entry.get_text())
         vm_name_label = Gtk.Label(label=vm_name_string)
         content_box.append(vm_name_label)
 
@@ -552,9 +574,11 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
         select_gpu_page = self.build_select_gpu_page()
         enable_vfio_page = self.build_enable_vfio_page()
+        confirm_page = self.build_passthrough_confirm_page()
 
-        self.passthrough_section_stack.add_named(select_gpu_page, "select_gpu")
-        self.passthrough_section_stack.add_named(enable_vfio_page, "enable_vfio")
+        self.passthrough_section_stack.add_named(select_gpu_page, "passthrough_select_gpu")
+        self.passthrough_section_stack.add_named(enable_vfio_page, "passthrough_enable_vfio")
+        self.passthrough_section_stack.add_named(confirm_page,"passthrough_confirm")
 
         self.update_passthrough_visible_page()
 
@@ -573,17 +597,31 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
         radio_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=28)
         radio_box.set_halign(Gtk.Align.CENTER)
-
+        '''
         nvidia_radio_button = Gtk.CheckButton()
-        nvidia_radio_button.connect("toggled", self.on_gpu_vendor_selected, "Nvidia")
+        nvidia_radio_button.connect("toggled", self.on_gpu_vendor_selected, "This for real")
 
         amd_radio_button = Gtk.CheckButton()
         amd_radio_button.set_group(nvidia_radio_button)
         amd_radio_button.connect("toggled", self.on_gpu_vendor_selected, "AMD")
 
-        radio_box.append(self.build_radio_row(nvidia_radio_button, "Nvidia"))
-        radio_box.append(self.build_radio_row(amd_radio_button, "AMD"))
+        intel_radio_button = Gtk.CheckButton()
+        intel_radio_button.set_group(nvidia_radio_button)
+        intel_radio_button.connect("toggled", self.on_gpu_vendor_selected, "Intel")
+        '''
+        print("gpus")
+        radio_buttons = []
+        for index in range(len(self.available_gpus)):
+            radio_buttons.append(Gtk.CheckButton())
+            radio_buttons[index].set_group(radio_buttons[0])
+            radio_buttons[index].connect("toggled",self.on_gpu_vendor_selected,self.available_gpus[index]['name'])
+            radio_box.append(self.build_radio_row(radio_buttons[index], self.available_gpus[index]['name']))
 
+        '''
+        radio_box.append(self.build_radio_row(nvidia_radio_button, "Nah"))
+        radio_box.append(self.build_radio_row(amd_radio_button, "AMD"))
+        radio_box.append(self.build_radio_row(intel_radio_button, "Intel"))
+        '''
         content_box.append(radio_box)
 
         page_box.append(content_box)
@@ -619,6 +657,35 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
         page_box.append(content_box)
         page_box.append(self.build_navigation_row("passthrough", show_previous=True, show_next=True))
+
+        return page_box
+
+    def build_passthrough_confirm_page(self):
+        page_box = self.build_page_box()
+
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=24)
+        content_box.set_valign(Gtk.Align.CENTER)
+        content_box.set_halign(Gtk.Align.CENTER)
+        content_box.set_vexpand(True)
+
+        title_label = Gtk.Label(label="Confirm results")
+        title_label.set_justify(Gtk.Justification.CENTER)
+        content_box.append(title_label)
+
+        gpu_label = Gtk.Label(label="Selected GPU: "+str(self.selected_gpu_vendor))
+        content_box.append(gpu_label)
+
+        vfio_mode_label = Gtk.Label(label="VFIO Mode: "+str(self.selected_vfio_answer))
+        content_box.append(vfio_mode_label)
+
+        apply_button = Gtk.Button(label="Apply")
+        apply_button.connect("clicked", self.apply_passthrough_changes)
+        content_box.append(apply_button)
+
+
+
+        page_box.append(content_box)
+        page_box.append(self.build_navigation_row("configure",show_previous=True, show_next=False))
 
         return page_box
 
@@ -680,7 +747,6 @@ class VMTuneWindow(Gtk.ApplicationWindow):
             core_labels.append(Gtk.Label(label = label_string))
 
         index=0
-        print(len(thread_labels))
         for thread in range(len(thread_labels)):
             label_string = "thread_" + str(index)
             checkbutton_dictionary[label_string] = thread_checkbuttons[index]
@@ -755,7 +821,6 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
     def on_preset_selected(self, check_button, preset_name):
         if check_button.get_active():
-            print("check_button.get_active()",check_button.get_active())
             self.selected_preset = preset_name
             print("Selected preset:", self.selected_preset)
 
@@ -783,7 +848,6 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         print()
 
     def apply_configure_changes(self,apply_button):
-        print("this is configured")
         vm_cpu_pinning_values = self.get_checkbutton_values(self.vm_cpu_pinning_checkbuttons)
         emulator_cpu_pinning_values = self.get_checkbutton_values(self.emulator_cpu_pinning_checkbuttons)
         print()
@@ -813,25 +877,6 @@ class VMTuneWindow(Gtk.ApplicationWindow):
     def update_create_visible_page(self):
         page_name = self.create_page_names[self.create_page_index]
         self.create_section_stack.set_visible_child_name(page_name)
-
-    '''
-    def on_browse_iso_clicked(self, button):
-        file_chooser = Gtk.FileChooserNative(
-            title="Choose ISO",
-            transient_for=self,
-            action=Gtk.FileChooserAction.OPEN,
-            accept_label="Open",
-            cancel_label="Cancel",
-        )
-
-        file_filter = Gtk.FileFilter()
-        file_filter.set_name("ISO files")
-        file_filter.add_pattern("*.iso")
-        file_chooser.add_filter(file_filter)
-
-        file_chooser.connect("response", self.on_iso_file_dialog_response)
-        file_chooser.show()
-    '''
     
     def on_browse_iso_clicked(self, sender):
         iso_file_filter = Gtk.FileFilter()
@@ -934,6 +979,20 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         print("GPU vendor:", self.selected_gpu_vendor)
         print("Enable VFIO:", self.selected_vfio_answer)
         print()
+    
+    def apply_passthrough_changes(self,apply_button):
+        print()
+        print("Passthrough wizard results")
+        print("--------------------------")
+        print("GPU vendor:", self.selected_gpu_vendor)
+        print("Enable VFIO:", self.selected_vfio_answer)
+        print()
+        
+        #api.gpu_passthrough.action(script_location,
+        #"set",
+        #vfio=self.selected_vfio_answer,
+        #gpuids=,
+        #libdir=lib_dir)
 
     # -------------------------------------------------
     # Shared navigation
@@ -979,7 +1038,6 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         comma_separated_list = ""
         index = 0
         for thread_name, checkbutton in checkbutton_dictionary.items():
-            print(checkbutton.get_active())
             if checkbutton.get_active() == True:
                 comma_separated_list=comma_separated_list+str(index)+","
 
@@ -987,7 +1045,6 @@ class VMTuneWindow(Gtk.ApplicationWindow):
             values[thread_name] = checkbutton.get_active()
             index=index+1
 
-        print("comma separted list",comma_separated_list)
         comma_separated_list=comma_separated_list[:-1]
 
         return comma_separated_list
