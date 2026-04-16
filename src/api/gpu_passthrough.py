@@ -1,6 +1,6 @@
 from . import api_utility
 
-def query(script_location,query_object):
+def query(lib_dir,query_object):
   """
   Execute a query against a VM-TUNE shell script and return the result as a Python object.
 
@@ -10,7 +10,7 @@ def query(script_location,query_object):
 
   Parameters
   ----------
-  script_location : str
+  lib_dir : str
       Absolute path to the shell script to execute.
       Example: "/usr/local/lib/VMTUNE/src/core/gpu_passthrough.sh"
 
@@ -44,7 +44,7 @@ def query(script_location,query_object):
 
 
   """
-  json_object = api_utility.query(script_location,query_object)
+  json_object = api_utility.query(lib_dir,"passthrough",query_object)
   return json_object
 
 def action(action, **action_args):
@@ -96,7 +96,7 @@ def action(action, **action_args):
   - No stdout/stderr or JSON parsing is performed.
   - Stateless: simply runs a command and returns status.
   """
-  result = api_utility.action(script_location,action,**action_args)
+  result = api_utility.action(lib_dir,"passthrough",action,**action_args)
   return result
 
 
