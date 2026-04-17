@@ -47,7 +47,7 @@ def query(script_location,query_object):
   json_object = api_utility.query(script_location,"passthrough",query_object)
   return json_object
 
-def action(action, **action_args):
+def action(script_location,action, **action_args):
   """
   Execute a VM-TUNE GPU passthrough CLI action.
 

@@ -33,29 +33,20 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
         gpu_query = api.gpu_passthrough.query(script_location,"gpus")
         self.available_gpus = gpu_query["gpus"]
-        print(type(gpu_query))
-        print("gpu query")
-        print(gpu_query)
-        print()
-        print("gpus")
-        print(gpu_query['gpus'])
-        print(type(gpu_query['gpus']))
-        print()
-        print(gpu_query.keys())
 
-        print(gpu_query['gpus'][0])
-        print(type(gpu_query['gpus'][0]))
-        print(gpu_query['gpus'][1])
-        print(type(gpu_query['gpus'][1]))
+        print(type(self.available_gpus))
+        print(self.available_gpus)
+        print(type(self.available_gpus[0]))
+        print(self.available_gpus[0])
 
-        print(gpu_query['gpus'][1].keys())
-        print(gpu_query['gpus'][1]['ids'])
+        
 
         self.selected_virtual_machine = None
         self.selected_preset = None
         self.selected_asus_laptop_answer = None
 
-        self.selected_gpu_vendor = None
+        self.selected_gpu_name = None
+        self.selected_gpu_ids = None
         self.selected_vfio_answer = None
 
         self.vm_cpu_pinning_checkbuttons = {}
@@ -597,31 +588,15 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
         radio_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=28)
         radio_box.set_halign(Gtk.Align.CENTER)
-        '''
-        nvidia_radio_button = Gtk.CheckButton()
-        nvidia_radio_button.connect("toggled", self.on_gpu_vendor_selected, "This for real")
 
-        amd_radio_button = Gtk.CheckButton()
-        amd_radio_button.set_group(nvidia_radio_button)
-        amd_radio_button.connect("toggled", self.on_gpu_vendor_selected, "AMD")
-
-        intel_radio_button = Gtk.CheckButton()
-        intel_radio_button.set_group(nvidia_radio_button)
-        intel_radio_button.connect("toggled", self.on_gpu_vendor_selected, "Intel")
-        '''
         print("gpus")
         radio_buttons = []
         for index in range(len(self.available_gpus)):
             radio_buttons.append(Gtk.CheckButton())
             radio_buttons[index].set_group(radio_buttons[0])
-            radio_buttons[index].connect("toggled",self.on_gpu_vendor_selected,self.available_gpus[index]['name'])
+            radio_buttons[index].connect("toggled",self.on_gpu_vendor_selected,self.available_gpus[index]['name'],self.available_gpus[index]['ids'])
             radio_box.append(self.build_radio_row(radio_buttons[index], self.available_gpus[index]['name']))
 
-        '''
-        radio_box.append(self.build_radio_row(nvidia_radio_button, "Nah"))
-        radio_box.append(self.build_radio_row(amd_radio_button, "AMD"))
-        radio_box.append(self.build_radio_row(intel_radio_button, "Intel"))
-        '''
         content_box.append(radio_box)
 
         page_box.append(content_box)
@@ -644,11 +619,11 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         radio_box.set_halign(Gtk.Align.CENTER)
 
         yes_radio_button = Gtk.CheckButton()
-        yes_radio_button.connect("toggled", self.on_vfio_answer_selected, "Yes")
+        yes_radio_button.connect("toggled", self.on_vfio_answer_selected, 1)
 
         no_radio_button = Gtk.CheckButton()
         no_radio_button.set_group(yes_radio_button)
-        no_radio_button.connect("toggled", self.on_vfio_answer_selected, "No")
+        no_radio_button.connect("toggled", self.on_vfio_answer_selected, 0)
 
         radio_box.append(self.build_radio_row(yes_radio_button, "Yes"))
         radio_box.append(self.build_radio_row(no_radio_button, "No"))
@@ -672,7 +647,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         title_label.set_justify(Gtk.Justification.CENTER)
         content_box.append(title_label)
 
-        gpu_label = Gtk.Label(label="Selected GPU: "+str(self.selected_gpu_vendor))
+        gpu_label = Gtk.Label(label="Selected GPU: "+str(self.selected_gpu_name))
         content_box.append(gpu_label)
 
         vfio_mode_label = Gtk.Label(label="VFIO Mode: "+str(self.selected_vfio_answer))
@@ -681,8 +656,6 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         apply_button = Gtk.Button(label="Apply")
         apply_button.connect("clicked", self.apply_passthrough_changes)
         content_box.append(apply_button)
-
-
 
         page_box.append(content_box)
         page_box.append(self.build_navigation_row("configure",show_previous=True, show_next=False))
@@ -958,10 +931,11 @@ class VMTuneWindow(Gtk.ApplicationWindow):
     # Passthrough actions
     # -------------------------------------------------
 
-    def on_gpu_vendor_selected(self, check_button, gpu_vendor_name):
+    def on_gpu_vendor_selected(self, check_button, gpu_vendor_name, gpu_ids):
         if check_button.get_active():
-            self.selected_gpu_vendor = gpu_vendor_name
-            print("Selected GPU vendor:", self.selected_gpu_vendor)
+            self.selected_gpu_name = gpu_vendor_name
+            self.selected_gpu_ids = gpu_ids
+            print("Selected GPU vendor:", self.selected_gpu_name)
 
     def on_vfio_answer_selected(self, check_button, answer_text):
         if check_button.get_active():
@@ -976,7 +950,8 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         print()
         print("Passthrough wizard results")
         print("--------------------------")
-        print("GPU vendor:", self.selected_gpu_vendor)
+        print("GPU vendor:", self.selected_gpu_name)
+        print("GPU ids:", self.selected_gpu_ids)
         print("Enable VFIO:", self.selected_vfio_answer)
         print()
     
@@ -984,15 +959,15 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         print()
         print("Passthrough wizard results")
         print("--------------------------")
-        print("GPU vendor:", self.selected_gpu_vendor)
+        print("GPU vendor:", self.selected_gpu_name)
+        print("GPU ids:", self.selected_gpu_ids)
         print("Enable VFIO:", self.selected_vfio_answer)
         print()
-        
-        #api.gpu_passthrough.action(script_location,
-        #"set",
-        #vfio=self.selected_vfio_answer,
-        #gpuids=,
-        #libdir=lib_dir)
+        api.gpu_passthrough.action(script_location,
+        "set",
+        vfio=self.selected_vfio_answer,
+        gpuids=self.selected_gpu_ids,
+        libdir=lib_dir)
 
     # -------------------------------------------------
     # Shared navigation
