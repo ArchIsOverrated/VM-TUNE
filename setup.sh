@@ -136,32 +136,35 @@ setup_gaming_laptop() {
   fi
 }
 
-
 setup_VMTUNE() {
   echo "Installing the VMTUNE tool now..."
-  echo "making $POLKIT_DIR/actions"
+
+  echo "Creating polkit directories..."
   mkdir -p "$POLKIT_DIR/actions"
-  echo "making $POLKIT_DIR/rules.d"
   mkdir -p "$POLKIT_DIR/rules.d"
 
-  echo "copying files over to $POLKIT_DIR"
-  cp -r "$SCRIPT_DIR/assets/vmtune.policy" "$POLKIT_DIR/actions"
-  cp -r "$SCRIPT_DIR/assets/50-vmtune.rules" "$POLKIT_DIR/rules.d"
+  echo "Installing polkit policy and rules..."
+  cp "$SCRIPT_DIR/assets/vmtune.policy"    "$POLKIT_DIR/actions/"
+  cp "$SCRIPT_DIR/assets/50-vmtune.rules"  "$POLKIT_DIR/rules.d/"
 
-  echo "making $LIB_DIR/src folder"
-  mkdir -p "$LIB_DIR/src"
-  echo "making $LIB_DIR/assets folder"
-  mkdir -p "$LIB_DIR/assets"
-  echo "making $LIB_DIR/hooks folder"
-  mkdir -p "$LIB_DIR/hooks"
-  echo "copying files over to $LIB_DIR"
-  cp -r "$SCRIPT_DIR/src" "$LIB_DIR"
-  cp -r "$SCRIPT_DIR/assets" "$LIB_DIR"
-  cp -r "$SCRIPT_DIR/hooks" "$LIB_DIR"
+  echo "Resetting $LIB_DIR..."
+  rm -rf "$LIB_DIR"
+  mkdir -p "$LIB_DIR"
 
-  echo "copying to $INSTALL_DIR"
-  cp -r "$SCRIPT_DIR/bin/vmtune" "$INSTALL_DIR"
-  cp -r "$SCRIPT_DIR/bin/vmtune.sh" "$INSTALL_DIR"
+  echo "Copying project files to $LIB_DIR..."
+  cp -r "$SCRIPT_DIR/src"             "$LIB_DIR/"
+  cp -r "$SCRIPT_DIR/assets"          "$LIB_DIR/"
+  cp -r "$SCRIPT_DIR/hooks"           "$LIB_DIR/"
+  cp    "$SCRIPT_DIR/pyproject.toml"  "$LIB_DIR/"
+
+  echo "Installing vmtune executables to $INSTALL_DIR..."
+  cp "$SCRIPT_DIR/bin/vmtune"     "$INSTALL_DIR"
+  cp "$SCRIPT_DIR/bin/vmtune.sh"  "$INSTALL_DIR"
+  cp "$SCRIPT_DIR/bin/vmtunegui"  "$INSTALL_DIR"
+
+  echo "Installing Python api package for user $TARGET_USER..."
+  sudo -H -u "$TARGET_USER" pip install --user "$SCRIPT_DIR"
+
 
   systemctl restart polkit
 }
