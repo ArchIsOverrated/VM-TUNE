@@ -665,6 +665,27 @@ class VMTuneWindow(Gtk.ApplicationWindow):
     # Shared UI helpers
     # -------------------------------------------------
 
+    def show_result_dialog(self, result):
+        if result["success"]:
+            message_type = Gtk.MessageType.INFO
+            title = "Success"
+            message = "VM configuration applied successfully."
+        else:
+            message_type = Gtk.MessageType.ERROR
+            title = "Failure"
+            message = f"VM configuration failed (return code: {result['returncode']})."
+
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            modal=True,
+            message_type=message_type,
+            buttons=Gtk.ButtonsType.OK,
+            text=title,
+            secondary_text=message,
+        )
+        dialog.connect("response", lambda d, r: d.destroy())
+        dialog.show()
+
     def build_page_box(self):
         page_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         page_box.set_hexpand(True)
@@ -841,7 +862,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         print("Asus gaming laptop:", self.selected_asus_laptop_answer,type(self.selected_asus_laptop_answer))
         print()
         
-        api.configure_vm.action(script_location,
+        result = api.configure_vm.action(script_location,
         "configure",
         vm=self.selected_virtual_machine,
         cpu=vm_cpu_pinning_values,
@@ -850,6 +871,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         laptop=self.selected_asus_laptop_answer,
         libdir=lib_dir)
 
+        self.show_result_dialog(result)
 
     # -------------------------------------------------
     # Create actions
@@ -935,7 +957,7 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         print("Storage GiB:", self.create_storage_entry.get_text())
         print()
         
-        api.create_vm.action(script_location,
+        result = api.create_vm.action(script_location,
         "create",
         vm=self.create_vm_name_entry.get_text(),
         iso=self.create_iso_path_entry.get_text(),
@@ -944,6 +966,9 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         cpu=self.create_cpu_entry.get_text(),
         osvariant=selected_os_variant,
         libdir=lib_dir)
+
+        self.show_result_dialog(result)
+
 
     # -------------------------------------------------
     # Passthrough actions
@@ -991,11 +1016,13 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         print("GPU ids:", self.selected_gpu_ids)
         print("Enable VFIO:", self.selected_vfio_answer)
         print()
-        api.gpu_passthrough.action(script_location,
+        result = api.gpu_passthrough.action(script_location,
         "set",
         vfio=self.selected_vfio_answer,
         gpuids=self.selected_gpu_ids,
         libdir=lib_dir)
+
+        self.show_result_dialog(result)
 
     # -------------------------------------------------
     # Shared navigation
