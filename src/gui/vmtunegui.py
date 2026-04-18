@@ -589,7 +589,6 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         radio_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=28)
         radio_box.set_halign(Gtk.Align.CENTER)
 
-        print("gpus")
         radio_buttons = []
         for index in range(len(self.available_gpus)):
             radio_buttons.append(Gtk.CheckButton())
@@ -688,7 +687,6 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         return row_box
 
     def build_cpu_pinning_grid(self, checkbutton_dictionary, cpu_topology):
-        #note to self to make this build based off of cpu layout
         grid = Gtk.Grid()
         grid.set_column_spacing(26)
         grid.set_row_spacing(18)
@@ -806,6 +804,16 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         page_name = self.configure_page_names[self.configure_page_index]
         self.configure_section_stack.set_visible_child_name(page_name)
 
+    def update_configure_confirm_page(self):
+        page_name = self.configure_page_names[self.configure_page_index]
+        
+        old_confirm_page = self.configure_section_stack.get_child_by_name("configure_confirm")
+        if old_confirm_page is not None:
+            self.configure_section_stack.remove(old_confirm_page)
+        
+        confirm_page = self.build_configure_confirm_page()
+        self.configure_section_stack.add_named(confirm_page, "configure_confirm")
+
     def print_configure_results(self):
         vm_cpu_pinning_values = self.get_checkbutton_values(self.vm_cpu_pinning_checkbuttons)
         emulator_cpu_pinning_values = self.get_checkbutton_values(self.emulator_cpu_pinning_checkbuttons)
@@ -881,6 +889,16 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
         self.create_iso_path_entry.set_text(selected_path)
 
+    def update_create_confirm_page(self):
+        page_name = self.configure_page_names[self.create_page_index]
+        
+        old_create_page = self.create_section_stack.get_child_by_name("create_confirm")
+        if old_create_page is not None:
+            self.create_section_stack.remove(old_create_page)
+        
+        create_page = self.build_create_confirm_page()
+        self.create_section_stack.add_named(create_page, "create_confirm")
+
     def print_create_results(self):
         selected_index = self.create_os_variant_dropdown.get_selected()
         selected_os_variant = None
@@ -946,6 +964,16 @@ class VMTuneWindow(Gtk.ApplicationWindow):
         page_name = self.passthrough_page_names[self.passthrough_page_index]
         self.passthrough_section_stack.set_visible_child_name(page_name)
 
+    def update_passthrough_confirm_page(self):
+        page_name = self.passthrough_page_names[self.create_page_index]
+        
+        old_create_page = self.create_section_stack.get_child_by_name("passthrough_confirm")
+        if old_create_page is not None:
+            self.create_section_stack.remove(old_create_page)
+        
+        passthrough_page = self.build_passthrough_confirm_page()
+        self.create_section_stack.add_named(passthrough_page, "passthrough_confirm")
+
     def print_passthrough_results(self):
         print()
         print("Passthrough wizard results")
@@ -991,21 +1019,24 @@ class VMTuneWindow(Gtk.ApplicationWindow):
 
     def on_next_clicked(self, button, section_name):
         if section_name == "configure":
-            print("configure")
             if self.configure_page_index < len(self.configure_page_names) - 1:
                 self.configure_page_index += 1
+                if self.configure_page_index == len(self.configure_page_names)-1:
+                    self.update_configure_confirm_page()
                 self.update_configure_visible_page()
 
         elif section_name == "create":
-            print("create")
             if self.create_page_index < len(self.create_page_names) - 1:
                 self.create_page_index += 1
+                if self.create_page_index == len(self.create_page_names)-1:
+                    self.update_create_confirm_page()
                 self.update_create_visible_page()
 
         elif section_name == "passthrough":
-            print("passthrough")
             if self.passthrough_page_index < len(self.passthrough_page_names) - 1:
                 self.passthrough_page_index += 1
+                if self.passthrough_page_index == len(self.passthrough_page_names)-1:
+                    self.update_passthrough_confirm_page()
                 self.update_passthrough_visible_page()
 
     def get_checkbutton_values(self, checkbutton_dictionary):
