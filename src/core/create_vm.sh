@@ -51,7 +51,7 @@ while [[ $# -gt 0 ]]; do
       CPU_COUNT="$2"
       shift 2
       ;;
-    --os-variant)
+    --osvariant)
       OS_VARIANT="$2"
       shift 2
       ;;

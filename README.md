@@ -31,9 +31,11 @@ So these scripts here aren't really the main scripts you will interface with. Th
 - **`lib/isolatecpus.sh`**: You must have cpu pinning configured in your xml for this to work. This isolates SYSTEMD processes from the VM cores so that the VM cores don't experience as much noise from the Linux Kernel.
 - **`lib/performancegoverner.sh`**: This sets the cpu performance governor to performance when you start your virtual machine for maximum performance and likewise back to powersaving when you quit your virtual machine"
 
-**Config files**
-- **`polkit/50-vmtune.rules`**: This is a file that is installed to /usr/share/polkit-1/rules.d/ that defines how to apply the vmtune policy. It says if you are in the libvirt group then allow them to connect to the virtual machines using the policy.
-- **`polkit/vmtune.policy`**: For this file applies the actual policy that 50-vmtune.rules applies.
+**Asset files**
+- **`assets/50-vmtune.rules`**: This is a file that is installed to /usr/share/polkit-1/rules.d/ that defines how to apply the vmtune policy. It says if you are in the libvirt group then allow them to connect to the virtual machines using the policy.
+- **`assets/vmtune.policy`**: For this file applies the actual policy that 50-vmtune.rules applies.
+- **`assets/fakebattery.dsl`**: This file has the ACPI source code for the fake battery.
+- **`fakebattery.aml`**: This is the machine code for the fake battery. This is supplied to the virtual machines to make the virtual machine think there is a battery.
 
 **How you can contribute**
 You can contribute by refining this documentation or adding new features or adding support for other distros on this since this script only supports RHEL based systems like Fedora.

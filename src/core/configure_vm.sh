@@ -51,13 +51,13 @@ while [[ $# -gt 0 ]]; do
       PRESET="$2"
       shift 2
       ;;
-    --laptop)
-      IS_LAPTOP=1
-      shift
+    --libdir)
+      LIB_DIR="$2"
+      shift 2
       ;;
-    *)
-      LIB_DIR="$1"
-      shift
+    --laptop)
+      IS_LAPTOP=$2
+      shift 2
       ;;
   esac
 done

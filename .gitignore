@@ -1,0 +1,11 @@
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Python package files
+vmtune_api.egg-info
+
+# VS Code
+.vscode/
+
